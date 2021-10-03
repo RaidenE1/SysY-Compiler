@@ -1,0 +1,26 @@
+# jobs 是一个哈希表，里面包含你的程序在不同题目环境下会使用的编译和运行策略。
+# jobs.pascal_lex 表示 pascal_lex 这个题目下你的配置
+[jobs.lexer]
+
+# image 规定了镜像如何构建。
+# 我们通常使用 Dockerfile 方法，此时填写 source = "dockerfile"
+#   使用 path 指定 dockerfile 的构建目录， "." 表示当前目录。
+#   使用 file 指定 dockerfile 相对于构建目录的位置，默认是 "./Dockerfile"。
+#   使用 tag 指定构建完成之后镜像的名称。没有实际意义，但是方便报错的时候看。
+image = { source = "dockerfile", path = ".", tag = "pre-lab-lexer" }
+
+# 我们还支持直接使用已经存在的镜像，此时填写 source = "image"
+#   此时，使用 tag 直接指定镜像的名称。
+# image = { source = "image", tag = "my-image" }
+
+# run 规定了如何评测你的代码。
+# run 是一个字符串数组，每一个字符串是一行在终端中运行的命令。
+#
+# ‘$’ 开头的参数会在运行之前被替换成评测时的样例文件，比如下面的命令在评测时
+# 就会被依次替换成 './target/release/pascal-lexer /tests/1.in' 等等。你可以自行改变
+# 这些参数的位置，来适应你的程序的输入方法。
+#
+# run 中的每一条命令的工作路径都是你在 dockerfile 中最后一次指定的工作路径。
+run = [
+  "python lexer.py $input",
+]
