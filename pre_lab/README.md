@@ -1,6 +1,10 @@
 # Pre Lab
 > 热身实验
 
-详细要求请见：[lexer指南](https://buaa-se-compiling.github.io/miniSysY-tutorial/pre/lab_lexer.html)、[paser指南](https://buaa-se-compiling.github.io/miniSysY-tutorial/pre/lab_parser.html)
+包含简单的词法分析和语法分析代码
 
 其中[lexer](./lexer/)内含`词法分析`的代码、dockerfile、和judge.toml
+详细介绍参见[lexer-readme.md](./lexer/readme.md)
+
+其中[paser](./paser/)内含`语法分析`的代码、dockerfile、和judge.toml
+详细介绍参见[paser-readme.md](./paser/readme.md)
