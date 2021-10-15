@@ -1,3 +1,7 @@
 FROM python:3
 WORKDIR /app/
-COPY main.py compiler.py ./
+RUN mkdir ply
+COPY main.py tokrules.py parser_modules.py /app/
+COPY ply ./ply/
+RUN ls -ls
+RUN cd ply && ls -l
