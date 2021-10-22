@@ -1,11 +1,3 @@
-'''
-Author: Asuka
-Date: 2021-10-13 00:34:36
-LastEditTime: 2021-10-19 09:04:49
-LastEditors: Asuka
-Description: In User Settings Edit
-FilePath: /lab2/main.py
-'''
 import sys
 from ply import lex
 import tokrules
@@ -17,35 +9,39 @@ def lexer_init(text):
     lexer.input(text)
     return lexer
 
-def print_out(lexer, path):
+def print_out(result, path):
+    # print(result)
     file = open(path, 'w')
-    tok = lexer.token()
-    ln = tok.lineno
-    if tok:
-        file.write("define dso_local ")
-    while tok:
-        if tok.lineno > ln:
+    title = result[0]
+    if title == 'FuncDef':
+        file.write('define dso_local ')
+    tok_list = result[1]
+    for idx,tok in enumerate(tok_list):
+        if tok == 'int':
+            file.write('i32')
+        elif tok == 'main':
+            file.write('@main')
+        elif tok == '(' or tok == ')':
+            file.write(tok + ' ')
+        elif tok == 'return':
+            file.write('ret ')
+        elif tok == ';':
             file.write('\n')
-            ln  = tok.lineno
-        if tok.value == 'int':
-            file.write("i32 ")
-        elif tok.value == 'main':
-            file.write("@main ")
-        elif tok.value == '{' or tok.value == '}' or tok.type == 'LPar' or tok.type == 'RPar' or tok.type == 'DECIMAL' or tok.type == 'HEXADECIMAL' or tok.type == 'OCTAL':
-            file.write(str(tok.value))
-            file.write(' ')
-        elif tok.type == 'Return':
-            file.write('ret i32 ')
-        tok = lexer.token()
+        elif tok == '{' or tok == '}':
+            file.write(tok + '\n')
+        elif type(tok) == int:
+            file.write('i32 ' + str(tok))
+
 
 def main(args):
+    # print(tokens)
     input_path = args[1]
     output_path = args[2]
     text = open(input_path, 'r').read()
+    # print(text)
     lexer = lexer_init(text)
-    lexer_copy = lexer.clone()
-    run_parser(text, lexer)
-    print_out(lexer_copy, output_path)
+    result = run_parser(text, lexer)
+    print_out(result, output_path)
 
 if __name__ == '__main__':
     main(sys.argv)

@@ -35,8 +35,8 @@ def p_Number(p):
 
 def p_error(p):
     sys.exit(1)
-    # print("Error de sintaxis", p)
-    # print("Error en linea: "+ str(p.lineno))
+    # print("Error syntax", p)
+    # print("Error in line : "+ str(p.lineno))
 
 def run_parser(text, lexer):
     parser = yacc.yacc(start = 'CompUnit')

@@ -13,7 +13,9 @@ reserved = {
     '/' : 'Div',
     '<' : 'Lt',
     '>' : 'Gt',
+    '%' : 'Mod',
     '==' : 'Eq',
+    '-' : 'Minus',
     'if' : 'If',
     'else' : 'Else',
     'while' : 'While',
@@ -31,7 +33,7 @@ def t_COMMENT(t):
      pass
 
 def t_RESERVED(t):
-    r'[a-zA-Z]+|\{|\}|\(|\)|\+|\*|;'
+    r'[a-zA-Z]+|\{|\}|\(|\)|\+|\*|;|-|/|%'
     t.type = reserved.get(t.value)# Check for reserved words
     return t
 
