@@ -23,10 +23,12 @@ reserved = {
     'continue' : 'Continue',
     'return' : 'Return',
     'main' : 'Main',
-    'int' : 'Int'
+    'int' : 'Int',
+    'const' : 'Const',
+    ',' : 'Comma'
 }
 
-tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'REVERSED', 'IDENT'] + list(reserved.values())
+tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'REVERSED', 'Nondigit', 'Digit'] + list(reserved.values())
 
 def t_COMMENT(t):
      r'(//.*)|(/\*(.|\r\n|\n|\t\n)*?\*/)'
@@ -43,8 +45,12 @@ def t_HEXADECIMAL(t):
     return t
 
 
-def t_IDENT(t):
-    r'[a-zA-Z_]+[0-9]'
+def t_Nondigit(t):
+    r'[a-zA-Z_]'
+    return t
+
+def t_Digit(t):
+    r'[0-9]'
     return t
 
 def t_DECIMAL(t):
