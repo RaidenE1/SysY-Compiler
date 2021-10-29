@@ -1,0 +1,7 @@
+[jobs.lab3]
+
+image = { source = "dockerfile", path = ".", tag = "lab3-part5" }
+
+run = [
+  "python main.py $input $ir",
+]
