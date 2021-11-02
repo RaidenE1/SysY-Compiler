@@ -1,0 +1,130 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    Break
+    COMMENT
+    Continue
+    DIGIT
+    Else
+    Eq
+    Gt
+    If
+    Lt
+    NONDIGIT
+    REVERSED
+    While
+
+Grammar
+
+Rule 0     S' -> CompUnit
+Rule 1     CompUnit -> FuncDef
+Rule 2     Decl -> ConstDecl
+Rule 3     Decl -> VarDecl
+Rule 4     ConstDecl -> Const BType ConstDef AddConstDef LBrace Comma ConstDef RBrace Semicolon
+Rule 5     ConstDef -> IDENT Assign ConstInitVal
+Rule 6     AddConstDef -> Comma ConstDef AddConstDef
+Rule 7     AddConstDef -> Comma ConstDef
+Rule 8     BType -> Int
+Rule 9     ConstInitVal -> ConstExp
+Rule 10    ConstExp -> AddExp
+Rule 11    VarDecl -> BType VarDef AddVarDef Semicolon
+Rule 12    VarDef -> IDENT
+Rule 13    VarDef -> IDENT Assign InitVal
+Rule 14    AddVarDef -> Comma VarDef AddVarDef
+Rule 15    AddVarDef -> Comma VarDef
+Rule 16    InitVal -> Exp
+Rule 17    FuncDef -> FuncType Main LPar RPar Block
+Rule 18    FuncType -> Int
+Rule 19    Block -> LBrace BlockItem AddBlock RBrace
+Rule 20    BlockItem -> Decl
+Rule 21    BlockItem -> Stmt
+Rule 22    AddBlock -> BlockItem
+Rule 23    AddBlock -> empty
+Rule 24    Stmt -> Return Exp Semicolon
+Rule 25    Stmt -> LVal Assign Exp Semicolon
+Rule 26    Stmt -> Exp Semicolon
+Rule 27    LVal -> IDENT
+Rule 28    Exp -> AddExp
+Rule 29    AddExp -> MulExp
+Rule 30    AddExp -> AddExp Plus MulExp
+Rule 31    AddExp -> AddExp Minus MulExp
+Rule 32    MulExp -> UnaryExp
+Rule 33    MulExp -> MulExp Div UnaryExp
+Rule 34    MulExp -> MulExp Mult UnaryExp
+Rule 35    MulExp -> MulExp Mod UnaryExp
+Rule 36    UnaryExp -> PrimaryExp
+Rule 37    UnaryExp -> Plus UnaryExp
+Rule 38    UnaryExp -> Minus UnaryExp
+Rule 39    PrimaryExp -> LPar Exp RPar
+Rule 40    PrimaryExp -> Number
+Rule 41    PrimaryExp -> LVal
+Rule 42    Number -> DECIMAL
+Rule 43    Number -> OCTAL
+Rule 44    Number -> HEXADECIMAL
+
+Terminals, with rules where they appear
+
+Assign               : 5 13 25
+Break                : 
+COMMENT              : 
+Comma                : 4 6 7 14 15
+Const                : 4
+Continue             : 
+DECIMAL              : 42
+DIGIT                : 
+Div                  : 33
+Else                 : 
+Eq                   : 
+Gt                   : 
+HEXADECIMAL          : 44
+IDENT                : 5 12 13 27
+If                   : 
+Int                  : 8 18
+LBrace               : 4 19
+LPar                 : 17 39
+Lt                   : 
+Main                 : 17
+Minus                : 31 38
+Mod                  : 35
+Mult                 : 34
+NONDIGIT             : 
+OCTAL                : 43
+Plus                 : 30 37
+RBrace               : 4 19
+REVERSED             : 
+RPar                 : 17 39
+Return               : 24
+Semicolon            : 4 11 24 25 26
+While                : 
+error                : 
+
+Nonterminals, with rules where they appear
+
+AddBlock             : 19
+AddConstDef          : 4 6
+AddExp               : 10 28 30 31
+AddVarDef            : 11 14
+BType                : 4 11
+Block                : 17
+BlockItem            : 19 22
+CompUnit             : 0
+ConstDecl            : 2
+ConstDef             : 4 4 6 7
+ConstExp             : 9
+ConstInitVal         : 5
+Decl                 : 20
+Exp                  : 16 24 25 26 39
+FuncDef              : 1
+FuncType             : 17
+InitVal              : 13
+LVal                 : 25 41
+MulExp               : 29 30 31 33 34 35
+Number               : 40
+PrimaryExp           : 36
+Stmt                 : 21
+UnaryExp             : 32 33 34 35 37 38
+VarDecl              : 3
+VarDef               : 11 14 15
+empty                : 23
+

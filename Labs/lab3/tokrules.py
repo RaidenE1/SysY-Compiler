@@ -28,7 +28,7 @@ reserved = {
     ',' : 'Comma'
 }
 
-tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'REVERSED', 'Nondigit', 'Digit'] + list(reserved.values())
+tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'REVERSED', 'IDENT', 'NONDIGIT', 'DIGIT'] + list(reserved.values())
 
 def t_COMMENT(t):
      r'(//.*)|(/\*(.|\r\n|\n|\t\n)*?\*/)'
@@ -39,17 +39,20 @@ def t_RESERVED(t):
     t.type = reserved.get(t.value)# Check for reserved words
     return t
 
+def t_IDENT(t):
+    r'[A-Za-z_][0-9]*[a-zA-Z_]*'
+
 def t_HEXADECIMAL(t):
     r'0[xX][0-9a-fA-F]+'
     t.value = int(t.value, 16)
     return t
 
 
-def t_Nondigit(t):
+def t_NONDIGIT(t):
     r'[a-zA-Z_]'
     return t
 
-def t_Digit(t):
+def t_DIGIT(t):
     r'[0-9]'
     return t
 
@@ -80,9 +83,9 @@ def t_IGNORE(t):
     pass
 
 def t_error(t):
-    sys.exit(1)
-    # print("Illegal character '%s'" % t.value[0])
-    # t.lexer.skip(1)
+    # sys.exit(1)
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
 
 
 
