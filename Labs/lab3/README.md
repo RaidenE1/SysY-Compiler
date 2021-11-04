@@ -1,68 +1,129 @@
-# Lab2 常量表达式
+# Lab3 局部变量和调用函数
 
-> 编译原理第二次实验
+> 编译原理第三次实验
 
 ## 实验内容
 
-- 本次实验包括两个部分，编译器需要在 lab 1 的基础上支持以下两个功能：
-    - 实现正号、负号
-    - 实现四则运算及模运算
-    
+- 本次实验包括两个部分，编译器需要在 lab 2 的基础上支持以下两个功能：
+    - 实现局部变量、局部常量的声明和使用
+    - 实现对 miniSysY 库函数的调用(`int getint()`,  `int getch()`,  `void putint(int)`, `void putch(int)`)
     
 
 ## 实现思路
 
-上次实验结尾说的深拷贝`lexer`然后根据`lexer`副本来输出token，汇总成`IR`的方法再次被抛弃了。。
+简单的列表无法实现复杂的功能，需要更加深层次的数据结构，所以添加了一个`class AstNode`，用来存放语法树的每一个节点，~~再次超大范围重构了~~,通过中序遍历节点来实现遍历语法树。
 
-之前那么做是因为lexer吐出得的token带有行号，可以灵活确定何时换行。但细想其实就会发现即使确定了怎么换行也没精力解决缩进~~(没能力)~~而且`IR`其实不在意换不换行，即使都是一行解释器也能处理，于是就选择用`yacc`的`result`，具体我还是选择以列表形式，尽量避免嵌套，最后在输出函数里一个`for`循环输出即可
+AstNode结构如下：
 
-当然还是稍微画蛇添足了一下，~~实在不能接受我的IR是一整行~~，我选择遇到`;`,`{`,`}`时将代码换行。
-
-于是我的`parser`大概变成了这样：
 ```python
-def p_Parser_init(p):
-    ''' CompUnit : FuncDef '''
-    p[0] = ['FuncDef', p[1]]
-    
-def p_FuncDef(p):
-    ''' FuncDef : FuncType Ident LPar RPar Block'''
-    p[0] = [p[1], p[2], p[3], p[4]] + p[5]
-
-#...
+class AstNode:
+    def __init__(self, type = 'T', children = None, name = None, val = None, const = True, loc = 0):
+        self.type = type # 是否为终结符
+        self.name = name # 类别
+        self.val = val # 名称
+        self.const = const # 是否为常量
+        self.loc = loc # 内存地址
 ```
-以`p_`开头的函数都是`PLY.yacc`可以识别的语法分析函数，末尾的等式可以建立起语法左右的关系，然后默认返回`p[0]`到出现这个非终结符的地方。对于算术表达式，我选择尽可能保持字符串格式输入到`Stmt`中，然后通过`eval()`函数获取表达式的值。
+
+暂时还十分简洁没设计什么重要的功能和属性，这可能也是后面我写了巨大的嵌套`if-else`的原因
+
+对于`*Exp`的节点，但拉出来做特殊处理。显然无法使用字符串+`eval()`的形式，特别定义了函数`operate_exp()`,函数内容如下：
+
+```python
+def operate_exp(n):
+    global VALUE_MAP
+    global FILE_OUT
+    global LOC
+    assert n.name[-3:] == 'Exp'
+    if n.name == 'PriExp':
+        if len(n.children) == 1:
+            res = n.children[0]
+            if res.name == 'Number':
+                return res.val, False
+            elif res.name == 'Ident':
+                if res.val not in VALUE_MAP.keys():
+                    exit(1)
+                LOC += 1
+                FILE_OUT.write('%%%d = load i32, i32* %%%d\n' % (LOC - 1, VALUE_MAP[res.val].loc))
+                # print('pri load')
+                return '%' + str(LOC - 1), False
+            else:
+                print("not int not str")
+        else: 
+            return operate_exp(n.children[1])
+    elif n.name == 'UnaryExp':
+        '''
+        太长不写
+        '''
+    elif n.name == 'SysFuncExp':
+        if len(n.children) == 4:
+            param = operate_exp(n.children[2])
+            if n.children[0] == 'putint':
+                FILE_OUT.write("call void @putint(i32 %s)\n" %(param[0]))
+            elif n.children[0] == 'putch':
+                FILE_OUT.write("call void @putch(i32 %s)\n" %(param[0]))
+            else:
+                print('SysFuncOP Error')
+                exit(0)
+        elif len(n.children) == 3:
+            if n.children[0] == 'getint':
+                FILE_OUT.write("%%%d = call i32 @getint()\n" % (LOC))
+                LOC += 1
+                return '%' + str(LOC - 1), False
+            elif n.children[0] == 'getch':
+                FILE_OUT.write("%%%d = call i32 @getch()\n" %(LOC))
+                LOC += 1
+                return '%' + str(LOC - 1), False
+            else:
+                print('SysFuncOP Error 3')
+                exit(0)
+        else:
+            print('SysFunc Error')
+            exit(0)
+    elif n.name == 'MulExp':
+        '''
+        太长不写
+        '''
+    elif n.name == 'AddExp':
+        '''
+        太长不写
+        '''
+    else:
+        print('EXP OPERATION ERROR')
+        exit(1)
+```
+
+省略掉的都是大体差不多的，函数本身是一个递归调用，如果函数的字节点存在`*Exp`节点，则调用这个函数输出。其中`n.name == 'SysFunc'`表示是基本库函数
+
+函数的最终返回结果为一个元组，第一位是一个int表示直接结果或者是一个str表示内存地址，第二位则是一个布尔值表示是否为一个指针(即是否需要load)
 
 
 ## 问题
 
-一共遇到了两个需要特殊考虑的点
+1. 定义`const`常量时需要考虑`*Exp`不含var，我选择在`ConstDef`语意中递归遍历第二个叶节点中的子节点，确保没有`node.const == True`的情况出现，否则调用`sys.exit(1)`。函数内容如下：
 
-1. 因为实验要求除法默认整除，而如果直接将输入的`/`交给`eval()`函数的话，那么将是一个浮点数计算。
-对于表达式`2 / 3`，实验要求输出应该是0，而`eval()`返回值是0.666...
-2. 第二个问题是取余运算，python默认的取余和c的取余有很大的差别：c取余结果正负只和被除数的正负有关，~~而python的我也没细查，反正bug了一个点肯定有区别，确信.jpg~~
-
-对于以上两个问题，解决办法都是一样的，即：对文法做局部的处理，遇到对应的运算符时，将部分表达式摘出来提前处理，得到结果后传承字符串传递给调用者。
-
-解决方法如下：
-1. 对于取余运算，使用前后两个表达式的绝对值做取余运算，最后根据被除数的正负来决定结果的正负。
-2. 对于除法，只需将对应位置的符号替换成python识别的整除`//`，一并交由顶层的`eval()`函数计算即可。
 ```python
-
-def p_MulExp(p):
-    ''' MulExp : UnaryExp 
-               | MulExp Div UnaryExp
-               | MulExp Mult UnaryExp
-               | MulExp Mod UnaryExp'''
-    if len(p) == 2:
-        p[0] = str(p[1])
-    elif p[2] == '/':
-        p[0] = p[1] + ' // ' + p[3]
-    elif p[2] == '%':
-        if eval(p[1]) < 0: 
-            p[0] = str(- (abs(eval(p[1]) % abs(eval(p[3])))))
+def check_val(n):
+    if isinstance(n, AstNode):
+        if n.type == 'T':
+            if n.name == 'Ident':
+                if not VALUE_MAP[n.val].const:
+                    return True
+                else:
+                    return False
+            else:
+                return False
         else:
-            p[0] = str( (abs(eval(p[1]) % abs(eval(p[3])))))
-    else: 
-        p[0] = p[1] + ' ' + p[2] + ' ' + p[3]
+            flag = False
+            for child in n.children:
+                flag = flag or check_val(child)
+            return flag
+    else:
+        return False
 ```
 
+
+
+2. 第二个问题是暂时没考虑库函数内含有多个param的情况，也没考虑`int getarray(int [])`和`void putarray(int, int [])`的情况，有精力再说吧
+
+对于以上两个问题，解决办法都是一样的，即：对文法做局部的处理，遇到对应的运算符时，将部分表达式摘出来提前处理，得到结果后传承字符串传递给调用者。

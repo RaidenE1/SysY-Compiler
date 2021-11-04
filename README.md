@@ -16,5 +16,6 @@
 - [pre-lab](./Labs/pre_lab) Accepted on Oct 3, 2021
 - [lab1](./Labs/lab1/) Accepted on Oct 15, 2021
 - [lab2](./Labs/lab2) Accepted on Oct 23, 2021
-- [lab3](./Labs/lab3/) yettoac...
+- [lab3](./Labs/lab3/) Accepted on Nov 5,2021
+- [lab4](./Labs/lab3/) yet to finish......
 
