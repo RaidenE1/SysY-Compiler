@@ -28,14 +28,18 @@ reserved = {
     ',' : 'Comma'
 }
 
-tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'RESERVED', 'IDENT'] + list(reserved.values())
+tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'RESERVED', 'IDENT', 'SysFunc'] + list(reserved.values())
 
 def t_COMMENT(t):
      r'(//.*)|(/\*(.|\r\n|\n|\t\n)*?\*/)'
      pass
 
+def t_SysFunc(t):
+    r'getint|putint|getch|putch'
+    return t
+
 def t_RESERVED(t):
-    r'[a-zA-Z_][0-9]*[a-zA-Z_]*|\{|\}|\(|\)|\+|\*|;|-|/|%|='
+    r'[a-zA-Z_][a-zA-Z_0-9]*|\{|\}|\(|\)|\+|\*|;|-|/|%|=|,'
     if t.value in reserved.keys():
         t.type = reserved.get(t.value)# Check for reserved words
         return t
