@@ -12,7 +12,9 @@ reserved = {
     '*' : 'Mult',
     '/' : 'Div',
     '<' : 'Lt',
+    '<=' : 'Le',
     '>' : 'Gt',
+    '>=' : 'Ge',
     '%' : 'Mod',
     '==' : 'Eq',
     '-' : 'Minus',
@@ -25,7 +27,10 @@ reserved = {
     'main' : 'Main',
     'int' : 'Int',
     'const' : 'Const',
-    ',' : 'Comma'
+    ',' : 'Comma',
+    '||' : 'OR',
+    '&&' : 'AND',
+    '!=' : 'NotEq'
 }
 
 tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'RESERVED', 'IDENT', 'SysFunc'] + list(reserved.values())
@@ -39,7 +44,7 @@ def t_SysFunc(t):
     return t
 
 def t_RESERVED(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*|\{|\}|\(|\)|\+|\*|;|-|/|%|=|,'
+    r'[a-zA-Z_][a-zA-Z_0-9]*|\{|\}|\(|\)|\+|\*|;|-|/|%|=|,|\|\||&&|==|!=|<=|>=|<|>|=""'
     if t.value in reserved.keys():
         t.type = reserved.get(t.value)# Check for reserved words
         return t
@@ -79,9 +84,9 @@ def t_IGNORE(t):
     pass
 
 def t_error(t):
-    # sys.exit(1)
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
+    sys.exit(1)
+    # print("Illegal character '%s'" % t.value[0])
+    # t.lexer.skip(1)
 
 
 

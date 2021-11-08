@@ -16,139 +16,6 @@ def lexer_init(text):
     lexer.input(text)
     return lexer
 
-def operate_exp(n):
-    global VALUE_MAP
-    global FILE_OUT
-    global LOC
-    assert n.name[-3:] == 'Exp'
-    if n.name == 'PriExp':
-        if len(n.children) == 1:
-            res = n.children[0]
-            if res.name == 'Number':
-                return res.val, False
-            elif res.name == 'Ident':
-                if res.val not in VALUE_MAP.keys():
-                    exit(1)
-                LOC += 1
-                FILE_OUT.write('%%%d = load i32, i32* %%%d\n' % (LOC - 1, VALUE_MAP[res.val].loc))
-                # print('pri load')
-                return '%' + str(LOC - 1), False
-            else:
-                print("not int not str")
-        else: 
-            return operate_exp(n.children[1])
-    elif n.name == 'UnaryExp':
-        if len(n.children) == 2:
-            op = n.children[0]
-            if op == '+':
-                res = operate_exp(n.children[1])
-                if isinstance(res[0], int):
-                    return res[0], False
-                elif isinstance(res[0], str):
-                    if res[1]:
-                        FILE_OUT.write("%%%d = load i32, i32* " % (LOC))
-                        FILE_OUT.write(res[0] + '\n')
-                        LOC += 1
-                    # print('+load')
-                    return '%' + str(LOC - 1), False
-            elif op == '-':
-                res = operate_exp(n.children[1])
-                if isinstance(res[0], int):
-                    return -res[0], False
-                elif isinstance(res[0], str):
-                    if res[1]:
-                        FILE_OUT.write("%%%d = load i32, i32* " % (LOC))
-                        FILE_OUT.write(res[0] + '\n')
-                        LOC += 1
-                    # print('-load')
-                    FILE_OUT.write("%%%d = mul i32 %d, " % (LOC, -1))
-                    FILE_OUT.write(res[0] + '\n')
-                    LOC += 1
-                    return '%' + str(LOC - 1), False
-        else:
-            print("UnaryExp Error")
-    elif n.name == 'SysFuncExp':
-        if len(n.children) == 4:
-            param = operate_exp(n.children[2])
-            if n.children[0] == 'putint':
-                FILE_OUT.write("call void @putint(i32 %s)\n" %(param[0]))
-            elif n.children[0] == 'putch':
-                FILE_OUT.write("call void @putch(i32 %s)\n" %(param[0]))
-            else:
-                print('SysFuncOP Error')
-                exit(0)
-        elif len(n.children) == 3:
-            if n.children[0] == 'getint':
-                FILE_OUT.write("%%%d = call i32 @getint()\n" % (LOC))
-                LOC += 1
-                return '%' + str(LOC - 1), False
-            elif n.children[0] == 'getch':
-                FILE_OUT.write("%%%d = call i32 @getch()\n" %(LOC))
-                LOC += 1
-                return '%' + str(LOC - 1), False
-            else:
-                print('SysFuncOP Error 3')
-                exit(0)
-        else:
-            print('SysFunc Error')
-            exit(0)
-    elif n.name == 'MulExp':
-        if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])
-            op2 = operate_exp(n.children[2])
-            if n.children[1] == '//':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%%d = sdiv i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
-                    LOC += 1
-                    return '%' + str(LOC - 1), False
-                else:
-                    return int(eval(str(op1[0]) + ' // ' + str(op2[0]))), False
-            elif n.children[1] == '*':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%%d = mul i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
-                    LOC += 1
-                    return '%' + str(LOC - 1), False
-                else:
-                    return int(eval(str(op1[0]) + ' * ' + str(op2[0]))), False
-            elif n.children[1] == '%':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%%d = srem i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
-                    LOC += 1
-                    return '%' + str(LOC - 1), False
-                else:
-                    if op1 >= 0 :
-                        sign = 1
-                    else:
-                        sign = -1
-                    return sign * int(eval(str(abs(op1[0])) + ' % ' + str(abs(op2[0])))), False
-            else:
-                print('MulExp OP Error')
-                exit(1)
-    elif n.name == 'AddExp':
-        if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])
-            op2 = operate_exp(n.children[2])
-            if n.children[1] == '+':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%%d = add i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
-                    LOC += 1
-                    return '%' + str(LOC - 1), False
-                else:
-                    return int(eval(str(op1[0]) + ' + ' + str(op2[0]))), False
-            elif n.children[1] == '-':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%%d = sub i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
-                    LOC += 1
-                    return '%' + str(LOC - 1), False
-                else:
-                    return int(eval(str(op1[0]) + ' - ' + str(op2[0]))), False
-            else:
-                print('AddExp OP Error')
-                exit(1)
-    else:
-        print('EXP OPERATION ERROR')
-        exit(1)
-
 def check_val(n):
     if isinstance(n, AstNode):
         if n.type == 'T':
@@ -166,6 +33,230 @@ def check_val(n):
             return flag
     else:
         return False
+
+def operate_exp(n):
+    global VALUE_MAP
+    global FILE_OUT
+    global LOC
+    assert n.name[-3:] == 'Exp'
+    if n.name == 'PriExp':
+        if len(n.children) == 1:
+            res = n.children[0]
+            if res.name == 'Number':
+                return res.val, False
+            elif res.name == 'Ident':
+                if res.val not in VALUE_MAP.keys():
+                    exit(1)
+                LOC += 1
+                FILE_OUT.write('%%x%d = load i32, i32* %%x%d\n' % (LOC - 1, VALUE_MAP[res.val].loc))
+                # print('pri load')
+                return '%x' + str(LOC - 1), False
+            else:
+                print("not int not str")
+        else: 
+            return operate_exp(n.children[1])
+    elif n.name == 'UnaryExp':
+        if len(n.children) == 2:
+            op = n.children[0]
+            if op == '+':
+                res = operate_exp(n.children[1])
+                if isinstance(res[0], int):
+                    return res[0], False
+                elif isinstance(res[0], str):
+                    if res[1]:
+                        # print(res[0])
+                        FILE_OUT.write("%%x%d = load i32, i32* " % (LOC))
+                        FILE_OUT.write(res[0] + '\n')
+                        LOC += 1
+                    # print('+load')
+                    return '%x' + str(LOC - 1), False
+            elif op == '-':
+                res = operate_exp(n.children[1])
+                if isinstance(res[0], int):
+                    return -res[0], False
+                elif isinstance(res[0], str):
+                    if res[1]:
+                        FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res[0]))
+                        LOC += 1
+                    # print('-load')
+                    FILE_OUT.write("%%x%d = mul i32 %d, " % (LOC, -1))
+                    FILE_OUT.write(res[0] + '\n')
+                    LOC += 1
+                    return '%x' + str(LOC - 1), False
+        else:
+            print("UnaryExp Error")
+    elif n.name == 'SysFuncExp':
+        if len(n.children) == 4:
+            param = operate_exp(n.children[2])
+            if n.children[0] == 'putint':
+                FILE_OUT.write("call void @putint(i32 %s)\n" %(param[0]))
+            elif n.children[0] == 'putch':
+                FILE_OUT.write("call void @putch(i32 %s)\n" %(param[0]))
+            else:
+                print('SysFuncOP Error')
+                exit(0)
+        elif len(n.children) == 3:
+            if n.children[0] == 'getint':
+                FILE_OUT.write("%%x%d = call i32 @getint()\n" % (LOC))
+                LOC += 1
+                return '%x' + str(LOC - 1), False
+            elif n.children[0] == 'getch':
+                FILE_OUT.write("%x%d = call i32 @getch()\n" %(LOC))
+                LOC += 1
+                return '%x' + str(LOC - 1), False
+            else:
+                print('SysFuncOP Error 3')
+                exit(0)
+        else:
+            print('SysFunc Error')
+            exit(0)
+    elif n.name == 'MulExp':
+        if len(n.children) == 3:
+            op1 = operate_exp(n.children[0])
+            op2 = operate_exp(n.children[2])
+            if n.children[1] == '//':
+                if isinstance(op1[0], str) or isinstance(op2[0], str):
+                    FILE_OUT.write("%%x%d = sdiv i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                    LOC += 1
+                    return '%x' + str(LOC - 1), False
+                else:
+                    return int(eval(str(op1[0]) + ' // ' + str(op2[0]))), False
+            elif n.children[1] == '*':
+                if isinstance(op1[0], str) or isinstance(op2[0], str):
+                    FILE_OUT.write("%%x%d = mul i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                    LOC += 1
+                    return '%x' + str(LOC - 1), False
+                else:
+                    return int(eval(str(op1[0]) + ' * ' + str(op2[0]))), False
+            elif n.children[1] == '%':
+                if isinstance(op1[0], str) or isinstance(op2[0], str):
+                    FILE_OUT.write("%%x%d = srem i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                    LOC += 1
+                    return '%x' + str(LOC - 1), False
+                else:
+                    if op1 >= 0 :
+                        sign = 1
+                    else:
+                        sign = -1
+                    return sign * int(eval(str(abs(op1[0])) + ' % ' + str(abs(op2[0])))), False
+            else:
+                print('MulExp OP Error')
+                exit(1)
+    elif n.name == 'AddExp':
+        if len(n.children) == 3:
+            op1 = operate_exp(n.children[0])
+            op2 = operate_exp(n.children[2])
+            if n.children[1] == '+':
+                if isinstance(op1[0], str) or isinstance(op2[0], str):
+                    FILE_OUT.write("%%x%d = add i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                    LOC += 1
+                    return '%x' + str(LOC - 1), False
+                else:
+                    return int(eval(str(op1[0]) + ' + ' + str(op2[0]))), False
+            elif n.children[1] == '-':
+                if isinstance(op1[0], str) or isinstance(op2[0], str):
+                    FILE_OUT.write("%%x%d = sub i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                    LOC += 1
+                    return '%x' + str(LOC - 1), False
+                else:
+                    return int(eval(str(op1[0]) + ' - ' + str(op2[0]))), False
+            else:
+                print('AddExp OP Error')
+                exit(1)
+    elif n.name == 'RelExp':
+        OpMap = {
+            '<' : 'slt',
+            '<=' : 'sle',
+            '>' : 'sgt',
+            '>=' : 'sge'
+        }
+        if len(n.children) == 3:
+            op1 = operate_exp(n.children[0])[0]
+            op2 = operate_exp(n.children[2])[0]
+            op = OpMap.get(n.children[1], None)
+            assert op is not None
+            FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
+            LOC += 1
+            return '%x' + str(LOC - 1), False
+        else:
+            print('RelExp len Error')
+            exit(1)
+    elif n.name == 'EqExp':
+        OpMap = {
+            '==' : 'eq',
+            '!=' : 'ne',
+        }
+        if len(n.children) == 3:
+            op1 = operate_exp(n.children[0])[0]
+            op2 = operate_exp(n.children[2])[0]
+            op = OpMap.get(n.children[1], None)
+            assert op is not None
+            FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
+            LOC += 1
+            return '%x' + str(LOC - 1), False
+        else:
+            print('EqExp len Error')
+            exit(1)
+    elif n.name == 'LAndExp':
+        if len(n.children) == 3:
+            op1 = operate_exp(n.children[0])[0]
+            op2 = operate_exp(n.children[2])[0]
+            FILE_OUT.write('%%x%d = and i1 %s, %s\n' % (LOC, op1, op2))
+            LOC += 1
+            return '%x' + str(LOC - 1), False
+        else:
+            print('LAndExp len Error')
+            exit(1)
+    elif n.name == 'LOrExp':
+        if len(n.children) == 3:
+            op1 = operate_exp(n.children[0])[0]
+            op2 = operate_exp(n.children[2])[0]
+            FILE_OUT.write('%%x%d = or i1 %s, %s\n' % (LOC, op1, op2))
+            LOC += 1
+            return '%x' + str(LOC - 1), False
+        else:
+            print('LAndExp len Error')
+            exit(1)
+    else:
+        print('EXP OPERATION ERROR')
+        exit(1)
+
+def if_else_operator(n):
+    global FILE_OUT
+    global LOC
+    assert n.name == 'IfElse'
+    if len(n.children) == 5:
+        res = operate_exp(n.children[2])[0]
+        stmt = n.children[4]
+        LOC += 1
+        loc = LOC - 1
+        FILE_OUT.write('br i1 %s, label %%x%d\n' %(res, loc))     
+        block_operate(stmt, loc)
+        FILE_OUT.write('br label %%x%d\n' %(loc))
+    elif len(n.children) == 7:
+        res = operate_exp(n.children[2])[0]
+        stmt1 = n.children[4]
+        stmt2 = n.children[6]
+        LOC += 2
+        loc1 = LOC - 2
+        loc2 = LOC - 1
+        FILE_OUT.write('br i1 %s, label %%x%d, label %%x%d\n' %(res, loc1, loc2))
+        block_operate(stmt1, loc1)
+        FILE_OUT.write('br label %%x%d\n' %(loc2))
+        block_operate(stmt2, loc2)
+    else:
+        print('IfElse len Error')
+        sys.exit()
+
+def block_operate(n, loc):
+    global FILE_OUT
+    global LOC 
+    FILE_OUT.write('x%d:\n' % (loc))
+    if n.name == 'IfElse':
+        if_else_operator(n)
+    else:
+        LDR(n, True)
+
                 
 def print_node(n):
     global FILE_OUT
@@ -179,7 +270,7 @@ def print_node(n):
     else:
         FILE_OUT.write(str(n.val) + ' ')
 
-def LDR(n):
+def LDR(n, ignore = False):
     if n != None and n.type != 'T':
         global FILE_OUT
         global VALUE_MAP
@@ -198,25 +289,26 @@ def LDR(n):
                     var.loc = LOC 
                     LOC += 1
                     VALUE_MAP[var.val] = var
-                    FILE_OUT.write('%%%d = alloca i32\n' % (var.loc))
+                    FILE_OUT.write('%%x%d = alloca i32\n' % (var.loc))
                 res = operate_exp(n.children[2])[0]
-                FILE_OUT.write('store i32 %s, i32* %%%d ' %(str(res), VALUE_MAP[var.val].loc))
+                print(res)
+                FILE_OUT.write('store i32 %s, i32* %%x%d ' %(str(res), VALUE_MAP[var.val].loc))
             else:
                 var.loc = LOC
                 LOC += 1
                 VALUE_MAP[var.val] = var
-                FILE_OUT.write('%%%d = alloca i32\n' % (var.loc))
+                FILE_OUT.write('%%x%d = alloca i32\n' % (var.loc))
             return
         elif n.name == 'ConstDef':
             var = n.children[0]
             var.loc = LOC 
             LOC += 1
             VALUE_MAP[var.val] = var
-            FILE_OUT.write('%%%d = alloca i32\n' % (var.loc))
+            FILE_OUT.write('%%x%d = alloca i32\n' % (var.loc))
             if check_val(n.children[2]):
                 sys.exit(1)
             res = operate_exp(n.children[2])[0]
-            FILE_OUT.write('store i32 %s, i32* %%%d' %(str(res),var.loc))
+            FILE_OUT.write('store i32 %s, i32* %%x%d' %(str(res),var.loc))
             return 
         elif n.name == 'VarAssign':
             var = n.children[0]
@@ -227,13 +319,16 @@ def LDR(n):
                     sys.exit(1)
                 else:
                     res = operate_exp(n.children[2])[0]
-                    FILE_OUT.write('store i32 %s, i32* %%%d \n' %(str(res), old_node.loc))
+                    FILE_OUT.write('store i32 %s, i32* %%x%d \n' %(str(res), old_node.loc))
             else:
                 sys.exit(1)
             return 
         elif n.name == 'return':
             op = operate_exp(n.children[1])
             FILE_OUT.write('ret i32 ' + str(op[0]) + '\n')
+            return 
+        elif n.name == 'IfElse':
+            if_else_operator(n)
             return 
         elif n.name[-3:] == 'Exp':
             operate_exp(n)
@@ -247,7 +342,10 @@ def LDR(n):
                     LDR(child)
             else:
                 if child == '{' or child == '}':
-                    FILE_OUT.write(child + '\n')
+                    if ignore:
+                        continue
+                    else:
+                        FILE_OUT.write(child + '\n')
                 elif child == ';' or child == ',':
                     FILE_OUT.write('\n')
                 elif child == 'int':

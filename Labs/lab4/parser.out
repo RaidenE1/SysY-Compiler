@@ -1,0 +1,2636 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    Break
+    COMMENT
+    Continue
+    RESERVED
+    While
+
+Grammar
+
+Rule 0     S' -> CompUnit
+Rule 1     CompUnit -> FuncDef
+Rule 2     FuncDef -> FuncType Main LPar RPar Block
+Rule 3     FuncType -> Int
+Rule 4     Block -> LBrace AddBlock RBrace
+Rule 5     AddBlock -> BlockItem
+Rule 6     AddBlock -> BlockItem AddBlock
+Rule 7     BlockItem -> Decl
+Rule 8     BlockItem -> Stmt
+Rule 9     Decl -> ConstDecl
+Rule 10    Decl -> VarDecl
+Rule 11    ConstDecl -> Const BType AddConstDef Semicolon
+Rule 12    AddConstDef -> ConstDef Comma AddConstDef
+Rule 13    AddConstDef -> ConstDef
+Rule 14    ConstDef -> IDENT Assign ConstInitVal
+Rule 15    BType -> Int
+Rule 16    ConstInitVal -> AddExp
+Rule 17    VarDecl -> BType AddVarDef Semicolon
+Rule 18    AddVarDef -> VarDef Comma AddVarDef
+Rule 19    AddVarDef -> VarDef
+Rule 20    VarDef -> IDENT
+Rule 21    VarDef -> IDENT Assign InitVal
+Rule 22    InitVal -> Exp
+Rule 23    Stmt -> Semicolon
+Rule 24    Stmt -> Block
+Rule 25    Stmt -> Exp Semicolon
+Rule 26    Stmt -> Return Exp Semicolon
+Rule 27    Stmt -> LVal Assign Exp Semicolon
+Rule 28    Stmt -> If LPar Cond RPar Stmt
+Rule 29    Stmt -> If LPar Cond RPar Stmt Else Stmt
+Rule 30    Cond -> LOrExp
+Rule 31    LOrExp -> LAndExp
+Rule 32    LOrExp -> LOrExp OR LAndExp
+Rule 33    LAndExp -> EqExp
+Rule 34    LAndExp -> LAndExp AND EqExp
+Rule 35    EqExp -> RelExp
+Rule 36    EqExp -> EqExp Eq RelExp
+Rule 37    EqExp -> EqExp NotEq RelExp
+Rule 38    RelExp -> AddExp
+Rule 39    RelExp -> RelExp Lt AddExp
+Rule 40    RelExp -> RelExp Gt AddExp
+Rule 41    RelExp -> RelExp Le AddExp
+Rule 42    RelExp -> RelExp Ge AddExp
+Rule 43    LVal -> IDENT
+Rule 44    Exp -> AddExp
+Rule 45    AddExp -> MulExp
+Rule 46    AddExp -> AddExp Plus MulExp
+Rule 47    AddExp -> AddExp Minus MulExp
+Rule 48    MulExp -> UnaryExp
+Rule 49    MulExp -> MulExp Div UnaryExp
+Rule 50    MulExp -> MulExp Mult UnaryExp
+Rule 51    MulExp -> MulExp Mod UnaryExp
+Rule 52    UnaryExp -> PrimaryExp
+Rule 53    UnaryExp -> Plus UnaryExp
+Rule 54    UnaryExp -> Minus UnaryExp
+Rule 55    UnaryExp -> SysFunc LPar RPar
+Rule 56    UnaryExp -> SysFunc LPar FuncRParams RPar
+Rule 57    FuncRParams -> Exp Exps
+Rule 58    FuncRParams -> Exp
+Rule 59    Exps -> Comma Exp
+Rule 60    PrimaryExp -> LPar Exp RPar
+Rule 61    PrimaryExp -> Number
+Rule 62    PrimaryExp -> LVal
+Rule 63    Number -> DECIMAL
+Rule 64    Number -> OCTAL
+Rule 65    Number -> HEXADECIMAL
+
+Terminals, with rules where they appear
+
+AND                  : 34
+Assign               : 14 21 27
+Break                : 
+COMMENT              : 
+Comma                : 12 18 59
+Const                : 11
+Continue             : 
+DECIMAL              : 63
+Div                  : 49
+Else                 : 29
+Eq                   : 36
+Ge                   : 42
+Gt                   : 40
+HEXADECIMAL          : 65
+IDENT                : 14 20 21 43
+If                   : 28 29
+Int                  : 3 15
+LBrace               : 4
+LPar                 : 2 28 29 55 56 60
+Le                   : 41
+Lt                   : 39
+Main                 : 2
+Minus                : 47 54
+Mod                  : 51
+Mult                 : 50
+NotEq                : 37
+OCTAL                : 64
+OR                   : 32
+Plus                 : 46 53
+RBrace               : 4
+RESERVED             : 
+RPar                 : 2 28 29 55 56 60
+Return               : 26
+Semicolon            : 11 17 23 25 26 27
+SysFunc              : 55 56
+While                : 
+error                : 
+
+Nonterminals, with rules where they appear
+
+AddBlock             : 4 6
+AddConstDef          : 11 12
+AddExp               : 16 38 39 40 41 42 44 46 47
+AddVarDef            : 17 18
+BType                : 11 17
+Block                : 2 24
+BlockItem            : 5 6
+CompUnit             : 0
+Cond                 : 28 29
+ConstDecl            : 9
+ConstDef             : 12 13
+ConstInitVal         : 14
+Decl                 : 7
+EqExp                : 33 34 36 37
+Exp                  : 22 25 26 27 57 58 59 60
+Exps                 : 57
+FuncDef              : 1
+FuncRParams          : 56
+FuncType             : 2
+InitVal              : 21
+LAndExp              : 31 32 34
+LOrExp               : 30 32
+LVal                 : 27 62
+MulExp               : 45 46 47 49 50 51
+Number               : 61
+PrimaryExp           : 52
+RelExp               : 35 36 37 39 40 41 42
+Stmt                 : 8 28 29 29
+UnaryExp             : 48 49 50 51 53 54
+VarDecl              : 10
+VarDef               : 18 19
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . CompUnit
+    (1) CompUnit -> . FuncDef
+    (2) FuncDef -> . FuncType Main LPar RPar Block
+    (3) FuncType -> . Int
+
+    Int             shift and go to state 4
+
+    CompUnit                       shift and go to state 1
+    FuncDef                        shift and go to state 2
+    FuncType                       shift and go to state 3
+
+state 1
+
+    (0) S' -> CompUnit .
+
+
+
+state 2
+
+    (1) CompUnit -> FuncDef .
+
+    $end            reduce using rule 1 (CompUnit -> FuncDef .)
+
+
+state 3
+
+    (2) FuncDef -> FuncType . Main LPar RPar Block
+
+    Main            shift and go to state 5
+
+
+state 4
+
+    (3) FuncType -> Int .
+
+    Main            reduce using rule 3 (FuncType -> Int .)
+
+
+state 5
+
+    (2) FuncDef -> FuncType Main . LPar RPar Block
+
+    LPar            shift and go to state 6
+
+
+state 6
+
+    (2) FuncDef -> FuncType Main LPar . RPar Block
+
+    RPar            shift and go to state 7
+
+
+state 7
+
+    (2) FuncDef -> FuncType Main LPar RPar . Block
+    (4) Block -> . LBrace AddBlock RBrace
+
+    LBrace          shift and go to state 9
+
+    Block                          shift and go to state 8
+
+state 8
+
+    (2) FuncDef -> FuncType Main LPar RPar Block .
+
+    $end            reduce using rule 2 (FuncDef -> FuncType Main LPar RPar Block .)
+
+
+state 9
+
+    (4) Block -> LBrace . AddBlock RBrace
+    (5) AddBlock -> . BlockItem
+    (6) AddBlock -> . BlockItem AddBlock
+    (7) BlockItem -> . Decl
+    (8) BlockItem -> . Stmt
+    (9) Decl -> . ConstDecl
+    (10) Decl -> . VarDecl
+    (23) Stmt -> . Semicolon
+    (24) Stmt -> . Block
+    (25) Stmt -> . Exp Semicolon
+    (26) Stmt -> . Return Exp Semicolon
+    (27) Stmt -> . LVal Assign Exp Semicolon
+    (28) Stmt -> . If LPar Cond RPar Stmt
+    (29) Stmt -> . If LPar Cond RPar Stmt Else Stmt
+    (11) ConstDecl -> . Const BType AddConstDef Semicolon
+    (17) VarDecl -> . BType AddVarDef Semicolon
+    (4) Block -> . LBrace AddBlock RBrace
+    (44) Exp -> . AddExp
+    (43) LVal -> . IDENT
+    (15) BType -> . Int
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+
+    Semicolon       shift and go to state 16
+    Return          shift and go to state 19
+    If              shift and go to state 21
+    Const           shift and go to state 23
+    LBrace          shift and go to state 9
+    IDENT           shift and go to state 26
+    Int             shift and go to state 27
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+
+    AddBlock                       shift and go to state 10
+    BlockItem                      shift and go to state 11
+    Decl                           shift and go to state 12
+    Stmt                           shift and go to state 13
+    ConstDecl                      shift and go to state 14
+    VarDecl                        shift and go to state 15
+    Block                          shift and go to state 17
+    Exp                            shift and go to state 18
+    LVal                           shift and go to state 20
+    BType                          shift and go to state 24
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+
+state 10
+
+    (4) Block -> LBrace AddBlock . RBrace
+
+    RBrace          shift and go to state 38
+
+
+state 11
+
+    (5) AddBlock -> BlockItem .
+    (6) AddBlock -> BlockItem . AddBlock
+    (5) AddBlock -> . BlockItem
+    (6) AddBlock -> . BlockItem AddBlock
+    (7) BlockItem -> . Decl
+    (8) BlockItem -> . Stmt
+    (9) Decl -> . ConstDecl
+    (10) Decl -> . VarDecl
+    (23) Stmt -> . Semicolon
+    (24) Stmt -> . Block
+    (25) Stmt -> . Exp Semicolon
+    (26) Stmt -> . Return Exp Semicolon
+    (27) Stmt -> . LVal Assign Exp Semicolon
+    (28) Stmt -> . If LPar Cond RPar Stmt
+    (29) Stmt -> . If LPar Cond RPar Stmt Else Stmt
+    (11) ConstDecl -> . Const BType AddConstDef Semicolon
+    (17) VarDecl -> . BType AddVarDef Semicolon
+    (4) Block -> . LBrace AddBlock RBrace
+    (44) Exp -> . AddExp
+    (43) LVal -> . IDENT
+    (15) BType -> . Int
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+
+    RBrace          reduce using rule 5 (AddBlock -> BlockItem .)
+    Semicolon       shift and go to state 16
+    Return          shift and go to state 19
+    If              shift and go to state 21
+    Const           shift and go to state 23
+    LBrace          shift and go to state 9
+    IDENT           shift and go to state 26
+    Int             shift and go to state 27
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+
+    BlockItem                      shift and go to state 11
+    AddBlock                       shift and go to state 39
+    Decl                           shift and go to state 12
+    Stmt                           shift and go to state 13
+    ConstDecl                      shift and go to state 14
+    VarDecl                        shift and go to state 15
+    Block                          shift and go to state 17
+    Exp                            shift and go to state 18
+    LVal                           shift and go to state 20
+    BType                          shift and go to state 24
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+
+state 12
+
+    (7) BlockItem -> Decl .
+
+    Semicolon       reduce using rule 7 (BlockItem -> Decl .)
+    Return          reduce using rule 7 (BlockItem -> Decl .)
+    If              reduce using rule 7 (BlockItem -> Decl .)
+    Const           reduce using rule 7 (BlockItem -> Decl .)
+    LBrace          reduce using rule 7 (BlockItem -> Decl .)
+    IDENT           reduce using rule 7 (BlockItem -> Decl .)
+    Int             reduce using rule 7 (BlockItem -> Decl .)
+    Plus            reduce using rule 7 (BlockItem -> Decl .)
+    Minus           reduce using rule 7 (BlockItem -> Decl .)
+    SysFunc         reduce using rule 7 (BlockItem -> Decl .)
+    LPar            reduce using rule 7 (BlockItem -> Decl .)
+    DECIMAL         reduce using rule 7 (BlockItem -> Decl .)
+    OCTAL           reduce using rule 7 (BlockItem -> Decl .)
+    HEXADECIMAL     reduce using rule 7 (BlockItem -> Decl .)
+    RBrace          reduce using rule 7 (BlockItem -> Decl .)
+
+
+state 13
+
+    (8) BlockItem -> Stmt .
+
+    Semicolon       reduce using rule 8 (BlockItem -> Stmt .)
+    Return          reduce using rule 8 (BlockItem -> Stmt .)
+    If              reduce using rule 8 (BlockItem -> Stmt .)
+    Const           reduce using rule 8 (BlockItem -> Stmt .)
+    LBrace          reduce using rule 8 (BlockItem -> Stmt .)
+    IDENT           reduce using rule 8 (BlockItem -> Stmt .)
+    Int             reduce using rule 8 (BlockItem -> Stmt .)
+    Plus            reduce using rule 8 (BlockItem -> Stmt .)
+    Minus           reduce using rule 8 (BlockItem -> Stmt .)
+    SysFunc         reduce using rule 8 (BlockItem -> Stmt .)
+    LPar            reduce using rule 8 (BlockItem -> Stmt .)
+    DECIMAL         reduce using rule 8 (BlockItem -> Stmt .)
+    OCTAL           reduce using rule 8 (BlockItem -> Stmt .)
+    HEXADECIMAL     reduce using rule 8 (BlockItem -> Stmt .)
+    RBrace          reduce using rule 8 (BlockItem -> Stmt .)
+
+
+state 14
+
+    (9) Decl -> ConstDecl .
+
+    Semicolon       reduce using rule 9 (Decl -> ConstDecl .)
+    Return          reduce using rule 9 (Decl -> ConstDecl .)
+    If              reduce using rule 9 (Decl -> ConstDecl .)
+    Const           reduce using rule 9 (Decl -> ConstDecl .)
+    LBrace          reduce using rule 9 (Decl -> ConstDecl .)
+    IDENT           reduce using rule 9 (Decl -> ConstDecl .)
+    Int             reduce using rule 9 (Decl -> ConstDecl .)
+    Plus            reduce using rule 9 (Decl -> ConstDecl .)
+    Minus           reduce using rule 9 (Decl -> ConstDecl .)
+    SysFunc         reduce using rule 9 (Decl -> ConstDecl .)
+    LPar            reduce using rule 9 (Decl -> ConstDecl .)
+    DECIMAL         reduce using rule 9 (Decl -> ConstDecl .)
+    OCTAL           reduce using rule 9 (Decl -> ConstDecl .)
+    HEXADECIMAL     reduce using rule 9 (Decl -> ConstDecl .)
+    RBrace          reduce using rule 9 (Decl -> ConstDecl .)
+
+
+state 15
+
+    (10) Decl -> VarDecl .
+
+    Semicolon       reduce using rule 10 (Decl -> VarDecl .)
+    Return          reduce using rule 10 (Decl -> VarDecl .)
+    If              reduce using rule 10 (Decl -> VarDecl .)
+    Const           reduce using rule 10 (Decl -> VarDecl .)
+    LBrace          reduce using rule 10 (Decl -> VarDecl .)
+    IDENT           reduce using rule 10 (Decl -> VarDecl .)
+    Int             reduce using rule 10 (Decl -> VarDecl .)
+    Plus            reduce using rule 10 (Decl -> VarDecl .)
+    Minus           reduce using rule 10 (Decl -> VarDecl .)
+    SysFunc         reduce using rule 10 (Decl -> VarDecl .)
+    LPar            reduce using rule 10 (Decl -> VarDecl .)
+    DECIMAL         reduce using rule 10 (Decl -> VarDecl .)
+    OCTAL           reduce using rule 10 (Decl -> VarDecl .)
+    HEXADECIMAL     reduce using rule 10 (Decl -> VarDecl .)
+    RBrace          reduce using rule 10 (Decl -> VarDecl .)
+
+
+state 16
+
+    (23) Stmt -> Semicolon .
+
+    Semicolon       reduce using rule 23 (Stmt -> Semicolon .)
+    Return          reduce using rule 23 (Stmt -> Semicolon .)
+    If              reduce using rule 23 (Stmt -> Semicolon .)
+    Const           reduce using rule 23 (Stmt -> Semicolon .)
+    LBrace          reduce using rule 23 (Stmt -> Semicolon .)
+    IDENT           reduce using rule 23 (Stmt -> Semicolon .)
+    Int             reduce using rule 23 (Stmt -> Semicolon .)
+    Plus            reduce using rule 23 (Stmt -> Semicolon .)
+    Minus           reduce using rule 23 (Stmt -> Semicolon .)
+    SysFunc         reduce using rule 23 (Stmt -> Semicolon .)
+    LPar            reduce using rule 23 (Stmt -> Semicolon .)
+    DECIMAL         reduce using rule 23 (Stmt -> Semicolon .)
+    OCTAL           reduce using rule 23 (Stmt -> Semicolon .)
+    HEXADECIMAL     reduce using rule 23 (Stmt -> Semicolon .)
+    RBrace          reduce using rule 23 (Stmt -> Semicolon .)
+    Else            reduce using rule 23 (Stmt -> Semicolon .)
+
+
+state 17
+
+    (24) Stmt -> Block .
+
+    Semicolon       reduce using rule 24 (Stmt -> Block .)
+    Return          reduce using rule 24 (Stmt -> Block .)
+    If              reduce using rule 24 (Stmt -> Block .)
+    Const           reduce using rule 24 (Stmt -> Block .)
+    LBrace          reduce using rule 24 (Stmt -> Block .)
+    IDENT           reduce using rule 24 (Stmt -> Block .)
+    Int             reduce using rule 24 (Stmt -> Block .)
+    Plus            reduce using rule 24 (Stmt -> Block .)
+    Minus           reduce using rule 24 (Stmt -> Block .)
+    SysFunc         reduce using rule 24 (Stmt -> Block .)
+    LPar            reduce using rule 24 (Stmt -> Block .)
+    DECIMAL         reduce using rule 24 (Stmt -> Block .)
+    OCTAL           reduce using rule 24 (Stmt -> Block .)
+    HEXADECIMAL     reduce using rule 24 (Stmt -> Block .)
+    RBrace          reduce using rule 24 (Stmt -> Block .)
+    Else            reduce using rule 24 (Stmt -> Block .)
+
+
+state 18
+
+    (25) Stmt -> Exp . Semicolon
+
+    Semicolon       shift and go to state 40
+
+
+state 19
+
+    (26) Stmt -> Return . Exp Semicolon
+    (44) Exp -> . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    Exp                            shift and go to state 41
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 20
+
+    (27) Stmt -> LVal . Assign Exp Semicolon
+    (62) PrimaryExp -> LVal .
+
+    Assign          shift and go to state 43
+    Div             reduce using rule 62 (PrimaryExp -> LVal .)
+    Mult            reduce using rule 62 (PrimaryExp -> LVal .)
+    Mod             reduce using rule 62 (PrimaryExp -> LVal .)
+    Plus            reduce using rule 62 (PrimaryExp -> LVal .)
+    Minus           reduce using rule 62 (PrimaryExp -> LVal .)
+    Semicolon       reduce using rule 62 (PrimaryExp -> LVal .)
+
+
+state 21
+
+    (28) Stmt -> If . LPar Cond RPar Stmt
+    (29) Stmt -> If . LPar Cond RPar Stmt Else Stmt
+
+    LPar            shift and go to state 44
+
+
+state 22
+
+    (60) PrimaryExp -> LPar . Exp RPar
+    (44) Exp -> . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    Exp                            shift and go to state 45
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 23
+
+    (11) ConstDecl -> Const . BType AddConstDef Semicolon
+    (15) BType -> . Int
+
+    Int             shift and go to state 27
+
+    BType                          shift and go to state 46
+
+state 24
+
+    (17) VarDecl -> BType . AddVarDef Semicolon
+    (18) AddVarDef -> . VarDef Comma AddVarDef
+    (19) AddVarDef -> . VarDef
+    (20) VarDef -> . IDENT
+    (21) VarDef -> . IDENT Assign InitVal
+
+    IDENT           shift and go to state 49
+
+    AddVarDef                      shift and go to state 47
+    VarDef                         shift and go to state 48
+
+state 25
+
+    (44) Exp -> AddExp .
+    (46) AddExp -> AddExp . Plus MulExp
+    (47) AddExp -> AddExp . Minus MulExp
+
+    Semicolon       reduce using rule 44 (Exp -> AddExp .)
+    RPar            reduce using rule 44 (Exp -> AddExp .)
+    Comma           reduce using rule 44 (Exp -> AddExp .)
+    Plus            shift and go to state 50
+    Minus           shift and go to state 51
+
+
+state 26
+
+    (43) LVal -> IDENT .
+
+    Assign          reduce using rule 43 (LVal -> IDENT .)
+    Div             reduce using rule 43 (LVal -> IDENT .)
+    Mult            reduce using rule 43 (LVal -> IDENT .)
+    Mod             reduce using rule 43 (LVal -> IDENT .)
+    Plus            reduce using rule 43 (LVal -> IDENT .)
+    Minus           reduce using rule 43 (LVal -> IDENT .)
+    Semicolon       reduce using rule 43 (LVal -> IDENT .)
+    RPar            reduce using rule 43 (LVal -> IDENT .)
+    Lt              reduce using rule 43 (LVal -> IDENT .)
+    Gt              reduce using rule 43 (LVal -> IDENT .)
+    Le              reduce using rule 43 (LVal -> IDENT .)
+    Ge              reduce using rule 43 (LVal -> IDENT .)
+    Eq              reduce using rule 43 (LVal -> IDENT .)
+    NotEq           reduce using rule 43 (LVal -> IDENT .)
+    AND             reduce using rule 43 (LVal -> IDENT .)
+    OR              reduce using rule 43 (LVal -> IDENT .)
+    Comma           reduce using rule 43 (LVal -> IDENT .)
+
+
+state 27
+
+    (15) BType -> Int .
+
+    IDENT           reduce using rule 15 (BType -> Int .)
+
+
+state 28
+
+    (45) AddExp -> MulExp .
+    (49) MulExp -> MulExp . Div UnaryExp
+    (50) MulExp -> MulExp . Mult UnaryExp
+    (51) MulExp -> MulExp . Mod UnaryExp
+
+    Plus            reduce using rule 45 (AddExp -> MulExp .)
+    Minus           reduce using rule 45 (AddExp -> MulExp .)
+    Semicolon       reduce using rule 45 (AddExp -> MulExp .)
+    RPar            reduce using rule 45 (AddExp -> MulExp .)
+    Lt              reduce using rule 45 (AddExp -> MulExp .)
+    Gt              reduce using rule 45 (AddExp -> MulExp .)
+    Le              reduce using rule 45 (AddExp -> MulExp .)
+    Ge              reduce using rule 45 (AddExp -> MulExp .)
+    Eq              reduce using rule 45 (AddExp -> MulExp .)
+    NotEq           reduce using rule 45 (AddExp -> MulExp .)
+    AND             reduce using rule 45 (AddExp -> MulExp .)
+    OR              reduce using rule 45 (AddExp -> MulExp .)
+    Comma           reduce using rule 45 (AddExp -> MulExp .)
+    Div             shift and go to state 52
+    Mult            shift and go to state 53
+    Mod             shift and go to state 54
+
+
+state 29
+
+    (53) UnaryExp -> Plus . UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    UnaryExp                       shift and go to state 55
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 30
+
+    (54) UnaryExp -> Minus . UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    UnaryExp                       shift and go to state 56
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 31
+
+    (48) MulExp -> UnaryExp .
+
+    Div             reduce using rule 48 (MulExp -> UnaryExp .)
+    Mult            reduce using rule 48 (MulExp -> UnaryExp .)
+    Mod             reduce using rule 48 (MulExp -> UnaryExp .)
+    Plus            reduce using rule 48 (MulExp -> UnaryExp .)
+    Minus           reduce using rule 48 (MulExp -> UnaryExp .)
+    Semicolon       reduce using rule 48 (MulExp -> UnaryExp .)
+    RPar            reduce using rule 48 (MulExp -> UnaryExp .)
+    Lt              reduce using rule 48 (MulExp -> UnaryExp .)
+    Gt              reduce using rule 48 (MulExp -> UnaryExp .)
+    Le              reduce using rule 48 (MulExp -> UnaryExp .)
+    Ge              reduce using rule 48 (MulExp -> UnaryExp .)
+    Eq              reduce using rule 48 (MulExp -> UnaryExp .)
+    NotEq           reduce using rule 48 (MulExp -> UnaryExp .)
+    AND             reduce using rule 48 (MulExp -> UnaryExp .)
+    OR              reduce using rule 48 (MulExp -> UnaryExp .)
+    Comma           reduce using rule 48 (MulExp -> UnaryExp .)
+
+
+state 32
+
+    (52) UnaryExp -> PrimaryExp .
+
+    Div             reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Mult            reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Mod             reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Plus            reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Minus           reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Semicolon       reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    RPar            reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Lt              reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Gt              reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Le              reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Ge              reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Eq              reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    NotEq           reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    AND             reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    OR              reduce using rule 52 (UnaryExp -> PrimaryExp .)
+    Comma           reduce using rule 52 (UnaryExp -> PrimaryExp .)
+
+
+state 33
+
+    (55) UnaryExp -> SysFunc . LPar RPar
+    (56) UnaryExp -> SysFunc . LPar FuncRParams RPar
+
+    LPar            shift and go to state 57
+
+
+state 34
+
+    (61) PrimaryExp -> Number .
+
+    Div             reduce using rule 61 (PrimaryExp -> Number .)
+    Mult            reduce using rule 61 (PrimaryExp -> Number .)
+    Mod             reduce using rule 61 (PrimaryExp -> Number .)
+    Plus            reduce using rule 61 (PrimaryExp -> Number .)
+    Minus           reduce using rule 61 (PrimaryExp -> Number .)
+    Semicolon       reduce using rule 61 (PrimaryExp -> Number .)
+    RPar            reduce using rule 61 (PrimaryExp -> Number .)
+    Lt              reduce using rule 61 (PrimaryExp -> Number .)
+    Gt              reduce using rule 61 (PrimaryExp -> Number .)
+    Le              reduce using rule 61 (PrimaryExp -> Number .)
+    Ge              reduce using rule 61 (PrimaryExp -> Number .)
+    Eq              reduce using rule 61 (PrimaryExp -> Number .)
+    NotEq           reduce using rule 61 (PrimaryExp -> Number .)
+    AND             reduce using rule 61 (PrimaryExp -> Number .)
+    OR              reduce using rule 61 (PrimaryExp -> Number .)
+    Comma           reduce using rule 61 (PrimaryExp -> Number .)
+
+
+state 35
+
+    (63) Number -> DECIMAL .
+
+    Div             reduce using rule 63 (Number -> DECIMAL .)
+    Mult            reduce using rule 63 (Number -> DECIMAL .)
+    Mod             reduce using rule 63 (Number -> DECIMAL .)
+    Plus            reduce using rule 63 (Number -> DECIMAL .)
+    Minus           reduce using rule 63 (Number -> DECIMAL .)
+    Semicolon       reduce using rule 63 (Number -> DECIMAL .)
+    RPar            reduce using rule 63 (Number -> DECIMAL .)
+    Lt              reduce using rule 63 (Number -> DECIMAL .)
+    Gt              reduce using rule 63 (Number -> DECIMAL .)
+    Le              reduce using rule 63 (Number -> DECIMAL .)
+    Ge              reduce using rule 63 (Number -> DECIMAL .)
+    Eq              reduce using rule 63 (Number -> DECIMAL .)
+    NotEq           reduce using rule 63 (Number -> DECIMAL .)
+    AND             reduce using rule 63 (Number -> DECIMAL .)
+    OR              reduce using rule 63 (Number -> DECIMAL .)
+    Comma           reduce using rule 63 (Number -> DECIMAL .)
+
+
+state 36
+
+    (64) Number -> OCTAL .
+
+    Div             reduce using rule 64 (Number -> OCTAL .)
+    Mult            reduce using rule 64 (Number -> OCTAL .)
+    Mod             reduce using rule 64 (Number -> OCTAL .)
+    Plus            reduce using rule 64 (Number -> OCTAL .)
+    Minus           reduce using rule 64 (Number -> OCTAL .)
+    Semicolon       reduce using rule 64 (Number -> OCTAL .)
+    RPar            reduce using rule 64 (Number -> OCTAL .)
+    Lt              reduce using rule 64 (Number -> OCTAL .)
+    Gt              reduce using rule 64 (Number -> OCTAL .)
+    Le              reduce using rule 64 (Number -> OCTAL .)
+    Ge              reduce using rule 64 (Number -> OCTAL .)
+    Eq              reduce using rule 64 (Number -> OCTAL .)
+    NotEq           reduce using rule 64 (Number -> OCTAL .)
+    AND             reduce using rule 64 (Number -> OCTAL .)
+    OR              reduce using rule 64 (Number -> OCTAL .)
+    Comma           reduce using rule 64 (Number -> OCTAL .)
+
+
+state 37
+
+    (65) Number -> HEXADECIMAL .
+
+    Div             reduce using rule 65 (Number -> HEXADECIMAL .)
+    Mult            reduce using rule 65 (Number -> HEXADECIMAL .)
+    Mod             reduce using rule 65 (Number -> HEXADECIMAL .)
+    Plus            reduce using rule 65 (Number -> HEXADECIMAL .)
+    Minus           reduce using rule 65 (Number -> HEXADECIMAL .)
+    Semicolon       reduce using rule 65 (Number -> HEXADECIMAL .)
+    RPar            reduce using rule 65 (Number -> HEXADECIMAL .)
+    Lt              reduce using rule 65 (Number -> HEXADECIMAL .)
+    Gt              reduce using rule 65 (Number -> HEXADECIMAL .)
+    Le              reduce using rule 65 (Number -> HEXADECIMAL .)
+    Ge              reduce using rule 65 (Number -> HEXADECIMAL .)
+    Eq              reduce using rule 65 (Number -> HEXADECIMAL .)
+    NotEq           reduce using rule 65 (Number -> HEXADECIMAL .)
+    AND             reduce using rule 65 (Number -> HEXADECIMAL .)
+    OR              reduce using rule 65 (Number -> HEXADECIMAL .)
+    Comma           reduce using rule 65 (Number -> HEXADECIMAL .)
+
+
+state 38
+
+    (4) Block -> LBrace AddBlock RBrace .
+
+    $end            reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    Semicolon       reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    Return          reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    If              reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    Const           reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    LBrace          reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    IDENT           reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    Int             reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    Plus            reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    Minus           reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    SysFunc         reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    LPar            reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    DECIMAL         reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    OCTAL           reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    HEXADECIMAL     reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    RBrace          reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+    Else            reduce using rule 4 (Block -> LBrace AddBlock RBrace .)
+
+
+state 39
+
+    (6) AddBlock -> BlockItem AddBlock .
+
+    RBrace          reduce using rule 6 (AddBlock -> BlockItem AddBlock .)
+
+
+state 40
+
+    (25) Stmt -> Exp Semicolon .
+
+    Semicolon       reduce using rule 25 (Stmt -> Exp Semicolon .)
+    Return          reduce using rule 25 (Stmt -> Exp Semicolon .)
+    If              reduce using rule 25 (Stmt -> Exp Semicolon .)
+    Const           reduce using rule 25 (Stmt -> Exp Semicolon .)
+    LBrace          reduce using rule 25 (Stmt -> Exp Semicolon .)
+    IDENT           reduce using rule 25 (Stmt -> Exp Semicolon .)
+    Int             reduce using rule 25 (Stmt -> Exp Semicolon .)
+    Plus            reduce using rule 25 (Stmt -> Exp Semicolon .)
+    Minus           reduce using rule 25 (Stmt -> Exp Semicolon .)
+    SysFunc         reduce using rule 25 (Stmt -> Exp Semicolon .)
+    LPar            reduce using rule 25 (Stmt -> Exp Semicolon .)
+    DECIMAL         reduce using rule 25 (Stmt -> Exp Semicolon .)
+    OCTAL           reduce using rule 25 (Stmt -> Exp Semicolon .)
+    HEXADECIMAL     reduce using rule 25 (Stmt -> Exp Semicolon .)
+    RBrace          reduce using rule 25 (Stmt -> Exp Semicolon .)
+    Else            reduce using rule 25 (Stmt -> Exp Semicolon .)
+
+
+state 41
+
+    (26) Stmt -> Return Exp . Semicolon
+
+    Semicolon       shift and go to state 58
+
+
+state 42
+
+    (62) PrimaryExp -> LVal .
+
+    Div             reduce using rule 62 (PrimaryExp -> LVal .)
+    Mult            reduce using rule 62 (PrimaryExp -> LVal .)
+    Mod             reduce using rule 62 (PrimaryExp -> LVal .)
+    Plus            reduce using rule 62 (PrimaryExp -> LVal .)
+    Minus           reduce using rule 62 (PrimaryExp -> LVal .)
+    Semicolon       reduce using rule 62 (PrimaryExp -> LVal .)
+    RPar            reduce using rule 62 (PrimaryExp -> LVal .)
+    Lt              reduce using rule 62 (PrimaryExp -> LVal .)
+    Gt              reduce using rule 62 (PrimaryExp -> LVal .)
+    Le              reduce using rule 62 (PrimaryExp -> LVal .)
+    Ge              reduce using rule 62 (PrimaryExp -> LVal .)
+    Eq              reduce using rule 62 (PrimaryExp -> LVal .)
+    NotEq           reduce using rule 62 (PrimaryExp -> LVal .)
+    AND             reduce using rule 62 (PrimaryExp -> LVal .)
+    OR              reduce using rule 62 (PrimaryExp -> LVal .)
+    Comma           reduce using rule 62 (PrimaryExp -> LVal .)
+
+
+state 43
+
+    (27) Stmt -> LVal Assign . Exp Semicolon
+    (44) Exp -> . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    LVal                           shift and go to state 42
+    Exp                            shift and go to state 59
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+
+state 44
+
+    (28) Stmt -> If LPar . Cond RPar Stmt
+    (29) Stmt -> If LPar . Cond RPar Stmt Else Stmt
+    (30) Cond -> . LOrExp
+    (31) LOrExp -> . LAndExp
+    (32) LOrExp -> . LOrExp OR LAndExp
+    (33) LAndExp -> . EqExp
+    (34) LAndExp -> . LAndExp AND EqExp
+    (35) EqExp -> . RelExp
+    (36) EqExp -> . EqExp Eq RelExp
+    (37) EqExp -> . EqExp NotEq RelExp
+    (38) RelExp -> . AddExp
+    (39) RelExp -> . RelExp Lt AddExp
+    (40) RelExp -> . RelExp Gt AddExp
+    (41) RelExp -> . RelExp Le AddExp
+    (42) RelExp -> . RelExp Ge AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    Cond                           shift and go to state 60
+    LOrExp                         shift and go to state 61
+    LAndExp                        shift and go to state 62
+    EqExp                          shift and go to state 63
+    RelExp                         shift and go to state 64
+    AddExp                         shift and go to state 65
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 45
+
+    (60) PrimaryExp -> LPar Exp . RPar
+
+    RPar            shift and go to state 66
+
+
+state 46
+
+    (11) ConstDecl -> Const BType . AddConstDef Semicolon
+    (12) AddConstDef -> . ConstDef Comma AddConstDef
+    (13) AddConstDef -> . ConstDef
+    (14) ConstDef -> . IDENT Assign ConstInitVal
+
+    IDENT           shift and go to state 69
+
+    AddConstDef                    shift and go to state 67
+    ConstDef                       shift and go to state 68
+
+state 47
+
+    (17) VarDecl -> BType AddVarDef . Semicolon
+
+    Semicolon       shift and go to state 70
+
+
+state 48
+
+    (18) AddVarDef -> VarDef . Comma AddVarDef
+    (19) AddVarDef -> VarDef .
+
+    Comma           shift and go to state 71
+    Semicolon       reduce using rule 19 (AddVarDef -> VarDef .)
+
+
+state 49
+
+    (20) VarDef -> IDENT .
+    (21) VarDef -> IDENT . Assign InitVal
+
+    Comma           reduce using rule 20 (VarDef -> IDENT .)
+    Semicolon       reduce using rule 20 (VarDef -> IDENT .)
+    Assign          shift and go to state 72
+
+
+state 50
+
+    (46) AddExp -> AddExp Plus . MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    MulExp                         shift and go to state 73
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 51
+
+    (47) AddExp -> AddExp Minus . MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    MulExp                         shift and go to state 74
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 52
+
+    (49) MulExp -> MulExp Div . UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    UnaryExp                       shift and go to state 75
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 53
+
+    (50) MulExp -> MulExp Mult . UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    UnaryExp                       shift and go to state 76
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 54
+
+    (51) MulExp -> MulExp Mod . UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    UnaryExp                       shift and go to state 77
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 55
+
+    (53) UnaryExp -> Plus UnaryExp .
+
+    Div             reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Mult            reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Mod             reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Plus            reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Minus           reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Semicolon       reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    RPar            reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Lt              reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Gt              reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Le              reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Ge              reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Eq              reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    NotEq           reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    AND             reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    OR              reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+    Comma           reduce using rule 53 (UnaryExp -> Plus UnaryExp .)
+
+
+state 56
+
+    (54) UnaryExp -> Minus UnaryExp .
+
+    Div             reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Mult            reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Mod             reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Plus            reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Minus           reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Semicolon       reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    RPar            reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Lt              reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Gt              reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Le              reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Ge              reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Eq              reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    NotEq           reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    AND             reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    OR              reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+    Comma           reduce using rule 54 (UnaryExp -> Minus UnaryExp .)
+
+
+state 57
+
+    (55) UnaryExp -> SysFunc LPar . RPar
+    (56) UnaryExp -> SysFunc LPar . FuncRParams RPar
+    (57) FuncRParams -> . Exp Exps
+    (58) FuncRParams -> . Exp
+    (44) Exp -> . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    RPar            shift and go to state 78
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    FuncRParams                    shift and go to state 79
+    Exp                            shift and go to state 80
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 58
+
+    (26) Stmt -> Return Exp Semicolon .
+
+    Semicolon       reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    Return          reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    If              reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    Const           reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    LBrace          reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    IDENT           reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    Int             reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    Plus            reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    Minus           reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    SysFunc         reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    LPar            reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    DECIMAL         reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    OCTAL           reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    HEXADECIMAL     reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    RBrace          reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+    Else            reduce using rule 26 (Stmt -> Return Exp Semicolon .)
+
+
+state 59
+
+    (27) Stmt -> LVal Assign Exp . Semicolon
+
+    Semicolon       shift and go to state 81
+
+
+state 60
+
+    (28) Stmt -> If LPar Cond . RPar Stmt
+    (29) Stmt -> If LPar Cond . RPar Stmt Else Stmt
+
+    RPar            shift and go to state 82
+
+
+state 61
+
+    (30) Cond -> LOrExp .
+    (32) LOrExp -> LOrExp . OR LAndExp
+
+    RPar            reduce using rule 30 (Cond -> LOrExp .)
+    OR              shift and go to state 83
+
+
+state 62
+
+    (31) LOrExp -> LAndExp .
+    (34) LAndExp -> LAndExp . AND EqExp
+
+    OR              reduce using rule 31 (LOrExp -> LAndExp .)
+    RPar            reduce using rule 31 (LOrExp -> LAndExp .)
+    AND             shift and go to state 84
+
+
+state 63
+
+    (33) LAndExp -> EqExp .
+    (36) EqExp -> EqExp . Eq RelExp
+    (37) EqExp -> EqExp . NotEq RelExp
+
+    AND             reduce using rule 33 (LAndExp -> EqExp .)
+    OR              reduce using rule 33 (LAndExp -> EqExp .)
+    RPar            reduce using rule 33 (LAndExp -> EqExp .)
+    Eq              shift and go to state 85
+    NotEq           shift and go to state 86
+
+
+state 64
+
+    (35) EqExp -> RelExp .
+    (39) RelExp -> RelExp . Lt AddExp
+    (40) RelExp -> RelExp . Gt AddExp
+    (41) RelExp -> RelExp . Le AddExp
+    (42) RelExp -> RelExp . Ge AddExp
+
+    Eq              reduce using rule 35 (EqExp -> RelExp .)
+    NotEq           reduce using rule 35 (EqExp -> RelExp .)
+    AND             reduce using rule 35 (EqExp -> RelExp .)
+    OR              reduce using rule 35 (EqExp -> RelExp .)
+    RPar            reduce using rule 35 (EqExp -> RelExp .)
+    Lt              shift and go to state 87
+    Gt              shift and go to state 88
+    Le              shift and go to state 89
+    Ge              shift and go to state 90
+
+
+state 65
+
+    (38) RelExp -> AddExp .
+    (46) AddExp -> AddExp . Plus MulExp
+    (47) AddExp -> AddExp . Minus MulExp
+
+    Lt              reduce using rule 38 (RelExp -> AddExp .)
+    Gt              reduce using rule 38 (RelExp -> AddExp .)
+    Le              reduce using rule 38 (RelExp -> AddExp .)
+    Ge              reduce using rule 38 (RelExp -> AddExp .)
+    Eq              reduce using rule 38 (RelExp -> AddExp .)
+    NotEq           reduce using rule 38 (RelExp -> AddExp .)
+    AND             reduce using rule 38 (RelExp -> AddExp .)
+    OR              reduce using rule 38 (RelExp -> AddExp .)
+    RPar            reduce using rule 38 (RelExp -> AddExp .)
+    Plus            shift and go to state 50
+    Minus           shift and go to state 51
+
+
+state 66
+
+    (60) PrimaryExp -> LPar Exp RPar .
+
+    Div             reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Mult            reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Mod             reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Plus            reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Minus           reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Semicolon       reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    RPar            reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Lt              reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Gt              reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Le              reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Ge              reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Eq              reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    NotEq           reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    AND             reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    OR              reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+    Comma           reduce using rule 60 (PrimaryExp -> LPar Exp RPar .)
+
+
+state 67
+
+    (11) ConstDecl -> Const BType AddConstDef . Semicolon
+
+    Semicolon       shift and go to state 91
+
+
+state 68
+
+    (12) AddConstDef -> ConstDef . Comma AddConstDef
+    (13) AddConstDef -> ConstDef .
+
+    Comma           shift and go to state 92
+    Semicolon       reduce using rule 13 (AddConstDef -> ConstDef .)
+
+
+state 69
+
+    (14) ConstDef -> IDENT . Assign ConstInitVal
+
+    Assign          shift and go to state 93
+
+
+state 70
+
+    (17) VarDecl -> BType AddVarDef Semicolon .
+
+    Semicolon       reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    Return          reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    If              reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    Const           reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    LBrace          reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    IDENT           reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    Int             reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    Plus            reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    Minus           reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    SysFunc         reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    LPar            reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    DECIMAL         reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    OCTAL           reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    HEXADECIMAL     reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+    RBrace          reduce using rule 17 (VarDecl -> BType AddVarDef Semicolon .)
+
+
+state 71
+
+    (18) AddVarDef -> VarDef Comma . AddVarDef
+    (18) AddVarDef -> . VarDef Comma AddVarDef
+    (19) AddVarDef -> . VarDef
+    (20) VarDef -> . IDENT
+    (21) VarDef -> . IDENT Assign InitVal
+
+    IDENT           shift and go to state 49
+
+    VarDef                         shift and go to state 48
+    AddVarDef                      shift and go to state 94
+
+state 72
+
+    (21) VarDef -> IDENT Assign . InitVal
+    (22) InitVal -> . Exp
+    (44) Exp -> . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    InitVal                        shift and go to state 95
+    Exp                            shift and go to state 96
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 73
+
+    (46) AddExp -> AddExp Plus MulExp .
+    (49) MulExp -> MulExp . Div UnaryExp
+    (50) MulExp -> MulExp . Mult UnaryExp
+    (51) MulExp -> MulExp . Mod UnaryExp
+
+    Plus            reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Minus           reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Semicolon       reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    RPar            reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Lt              reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Gt              reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Le              reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Ge              reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Eq              reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    NotEq           reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    AND             reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    OR              reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Comma           reduce using rule 46 (AddExp -> AddExp Plus MulExp .)
+    Div             shift and go to state 52
+    Mult            shift and go to state 53
+    Mod             shift and go to state 54
+
+
+state 74
+
+    (47) AddExp -> AddExp Minus MulExp .
+    (49) MulExp -> MulExp . Div UnaryExp
+    (50) MulExp -> MulExp . Mult UnaryExp
+    (51) MulExp -> MulExp . Mod UnaryExp
+
+    Plus            reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Minus           reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Semicolon       reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    RPar            reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Lt              reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Gt              reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Le              reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Ge              reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Eq              reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    NotEq           reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    AND             reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    OR              reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Comma           reduce using rule 47 (AddExp -> AddExp Minus MulExp .)
+    Div             shift and go to state 52
+    Mult            shift and go to state 53
+    Mod             shift and go to state 54
+
+
+state 75
+
+    (49) MulExp -> MulExp Div UnaryExp .
+
+    Div             reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Mult            reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Mod             reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Plus            reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Minus           reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Semicolon       reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    RPar            reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Lt              reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Gt              reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Le              reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Ge              reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Eq              reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    NotEq           reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    AND             reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    OR              reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+    Comma           reduce using rule 49 (MulExp -> MulExp Div UnaryExp .)
+
+
+state 76
+
+    (50) MulExp -> MulExp Mult UnaryExp .
+
+    Div             reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Mult            reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Mod             reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Plus            reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Minus           reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Semicolon       reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    RPar            reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Lt              reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Gt              reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Le              reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Ge              reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Eq              reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    NotEq           reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    AND             reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    OR              reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+    Comma           reduce using rule 50 (MulExp -> MulExp Mult UnaryExp .)
+
+
+state 77
+
+    (51) MulExp -> MulExp Mod UnaryExp .
+
+    Div             reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Mult            reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Mod             reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Plus            reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Minus           reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Semicolon       reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    RPar            reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Lt              reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Gt              reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Le              reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Ge              reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Eq              reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    NotEq           reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    AND             reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    OR              reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+    Comma           reduce using rule 51 (MulExp -> MulExp Mod UnaryExp .)
+
+
+state 78
+
+    (55) UnaryExp -> SysFunc LPar RPar .
+
+    Div             reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Mult            reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Mod             reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Plus            reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Minus           reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Semicolon       reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    RPar            reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Lt              reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Gt              reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Le              reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Ge              reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Eq              reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    NotEq           reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    AND             reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    OR              reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+    Comma           reduce using rule 55 (UnaryExp -> SysFunc LPar RPar .)
+
+
+state 79
+
+    (56) UnaryExp -> SysFunc LPar FuncRParams . RPar
+
+    RPar            shift and go to state 97
+
+
+state 80
+
+    (57) FuncRParams -> Exp . Exps
+    (58) FuncRParams -> Exp .
+    (59) Exps -> . Comma Exp
+
+    RPar            reduce using rule 58 (FuncRParams -> Exp .)
+    Comma           shift and go to state 99
+
+    Exps                           shift and go to state 98
+
+state 81
+
+    (27) Stmt -> LVal Assign Exp Semicolon .
+
+    Semicolon       reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    Return          reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    If              reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    Const           reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    LBrace          reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    IDENT           reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    Int             reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    Plus            reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    Minus           reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    SysFunc         reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    LPar            reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    DECIMAL         reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    OCTAL           reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    HEXADECIMAL     reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    RBrace          reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+    Else            reduce using rule 27 (Stmt -> LVal Assign Exp Semicolon .)
+
+
+state 82
+
+    (28) Stmt -> If LPar Cond RPar . Stmt
+    (29) Stmt -> If LPar Cond RPar . Stmt Else Stmt
+    (23) Stmt -> . Semicolon
+    (24) Stmt -> . Block
+    (25) Stmt -> . Exp Semicolon
+    (26) Stmt -> . Return Exp Semicolon
+    (27) Stmt -> . LVal Assign Exp Semicolon
+    (28) Stmt -> . If LPar Cond RPar Stmt
+    (29) Stmt -> . If LPar Cond RPar Stmt Else Stmt
+    (4) Block -> . LBrace AddBlock RBrace
+    (44) Exp -> . AddExp
+    (43) LVal -> . IDENT
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+
+    Semicolon       shift and go to state 16
+    Return          shift and go to state 19
+    If              shift and go to state 21
+    LBrace          shift and go to state 9
+    IDENT           shift and go to state 26
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+
+    Stmt                           shift and go to state 100
+    Block                          shift and go to state 17
+    Exp                            shift and go to state 18
+    LVal                           shift and go to state 20
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+
+state 83
+
+    (32) LOrExp -> LOrExp OR . LAndExp
+    (33) LAndExp -> . EqExp
+    (34) LAndExp -> . LAndExp AND EqExp
+    (35) EqExp -> . RelExp
+    (36) EqExp -> . EqExp Eq RelExp
+    (37) EqExp -> . EqExp NotEq RelExp
+    (38) RelExp -> . AddExp
+    (39) RelExp -> . RelExp Lt AddExp
+    (40) RelExp -> . RelExp Gt AddExp
+    (41) RelExp -> . RelExp Le AddExp
+    (42) RelExp -> . RelExp Ge AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    LAndExp                        shift and go to state 101
+    EqExp                          shift and go to state 63
+    RelExp                         shift and go to state 64
+    AddExp                         shift and go to state 65
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 84
+
+    (34) LAndExp -> LAndExp AND . EqExp
+    (35) EqExp -> . RelExp
+    (36) EqExp -> . EqExp Eq RelExp
+    (37) EqExp -> . EqExp NotEq RelExp
+    (38) RelExp -> . AddExp
+    (39) RelExp -> . RelExp Lt AddExp
+    (40) RelExp -> . RelExp Gt AddExp
+    (41) RelExp -> . RelExp Le AddExp
+    (42) RelExp -> . RelExp Ge AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    EqExp                          shift and go to state 102
+    RelExp                         shift and go to state 64
+    AddExp                         shift and go to state 65
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 85
+
+    (36) EqExp -> EqExp Eq . RelExp
+    (38) RelExp -> . AddExp
+    (39) RelExp -> . RelExp Lt AddExp
+    (40) RelExp -> . RelExp Gt AddExp
+    (41) RelExp -> . RelExp Le AddExp
+    (42) RelExp -> . RelExp Ge AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    RelExp                         shift and go to state 103
+    AddExp                         shift and go to state 65
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 86
+
+    (37) EqExp -> EqExp NotEq . RelExp
+    (38) RelExp -> . AddExp
+    (39) RelExp -> . RelExp Lt AddExp
+    (40) RelExp -> . RelExp Gt AddExp
+    (41) RelExp -> . RelExp Le AddExp
+    (42) RelExp -> . RelExp Ge AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    RelExp                         shift and go to state 104
+    AddExp                         shift and go to state 65
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 87
+
+    (39) RelExp -> RelExp Lt . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    AddExp                         shift and go to state 105
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 88
+
+    (40) RelExp -> RelExp Gt . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    AddExp                         shift and go to state 106
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 89
+
+    (41) RelExp -> RelExp Le . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    AddExp                         shift and go to state 107
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 90
+
+    (42) RelExp -> RelExp Ge . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    AddExp                         shift and go to state 108
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 91
+
+    (11) ConstDecl -> Const BType AddConstDef Semicolon .
+
+    Semicolon       reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    Return          reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    If              reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    Const           reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    LBrace          reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    IDENT           reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    Int             reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    Plus            reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    Minus           reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    SysFunc         reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    LPar            reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    DECIMAL         reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    OCTAL           reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    HEXADECIMAL     reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+    RBrace          reduce using rule 11 (ConstDecl -> Const BType AddConstDef Semicolon .)
+
+
+state 92
+
+    (12) AddConstDef -> ConstDef Comma . AddConstDef
+    (12) AddConstDef -> . ConstDef Comma AddConstDef
+    (13) AddConstDef -> . ConstDef
+    (14) ConstDef -> . IDENT Assign ConstInitVal
+
+    IDENT           shift and go to state 69
+
+    ConstDef                       shift and go to state 68
+    AddConstDef                    shift and go to state 109
+
+state 93
+
+    (14) ConstDef -> IDENT Assign . ConstInitVal
+    (16) ConstInitVal -> . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    ConstInitVal                   shift and go to state 110
+    AddExp                         shift and go to state 111
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 94
+
+    (18) AddVarDef -> VarDef Comma AddVarDef .
+
+    Semicolon       reduce using rule 18 (AddVarDef -> VarDef Comma AddVarDef .)
+
+
+state 95
+
+    (21) VarDef -> IDENT Assign InitVal .
+
+    Comma           reduce using rule 21 (VarDef -> IDENT Assign InitVal .)
+    Semicolon       reduce using rule 21 (VarDef -> IDENT Assign InitVal .)
+
+
+state 96
+
+    (22) InitVal -> Exp .
+
+    Comma           reduce using rule 22 (InitVal -> Exp .)
+    Semicolon       reduce using rule 22 (InitVal -> Exp .)
+
+
+state 97
+
+    (56) UnaryExp -> SysFunc LPar FuncRParams RPar .
+
+    Div             reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Mult            reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Mod             reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Plus            reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Minus           reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Semicolon       reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    RPar            reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Lt              reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Gt              reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Le              reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Ge              reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Eq              reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    NotEq           reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    AND             reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    OR              reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+    Comma           reduce using rule 56 (UnaryExp -> SysFunc LPar FuncRParams RPar .)
+
+
+state 98
+
+    (57) FuncRParams -> Exp Exps .
+
+    RPar            reduce using rule 57 (FuncRParams -> Exp Exps .)
+
+
+state 99
+
+    (59) Exps -> Comma . Exp
+    (44) Exp -> . AddExp
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+    (43) LVal -> . IDENT
+
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+    IDENT           shift and go to state 26
+
+    Exp                            shift and go to state 112
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+    LVal                           shift and go to state 42
+
+state 100
+
+    (28) Stmt -> If LPar Cond RPar Stmt .
+    (29) Stmt -> If LPar Cond RPar Stmt . Else Stmt
+
+  ! shift/reduce conflict for Else resolved as shift
+    Semicolon       reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    Return          reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    If              reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    Const           reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    LBrace          reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    IDENT           reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    Int             reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    Plus            reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    Minus           reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    SysFunc         reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    LPar            reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    DECIMAL         reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    OCTAL           reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    HEXADECIMAL     reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    RBrace          reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .)
+    Else            shift and go to state 113
+
+  ! Else            [ reduce using rule 28 (Stmt -> If LPar Cond RPar Stmt .) ]
+
+
+state 101
+
+    (32) LOrExp -> LOrExp OR LAndExp .
+    (34) LAndExp -> LAndExp . AND EqExp
+
+    OR              reduce using rule 32 (LOrExp -> LOrExp OR LAndExp .)
+    RPar            reduce using rule 32 (LOrExp -> LOrExp OR LAndExp .)
+    AND             shift and go to state 84
+
+
+state 102
+
+    (34) LAndExp -> LAndExp AND EqExp .
+    (36) EqExp -> EqExp . Eq RelExp
+    (37) EqExp -> EqExp . NotEq RelExp
+
+    AND             reduce using rule 34 (LAndExp -> LAndExp AND EqExp .)
+    OR              reduce using rule 34 (LAndExp -> LAndExp AND EqExp .)
+    RPar            reduce using rule 34 (LAndExp -> LAndExp AND EqExp .)
+    Eq              shift and go to state 85
+    NotEq           shift and go to state 86
+
+
+state 103
+
+    (36) EqExp -> EqExp Eq RelExp .
+    (39) RelExp -> RelExp . Lt AddExp
+    (40) RelExp -> RelExp . Gt AddExp
+    (41) RelExp -> RelExp . Le AddExp
+    (42) RelExp -> RelExp . Ge AddExp
+
+    Eq              reduce using rule 36 (EqExp -> EqExp Eq RelExp .)
+    NotEq           reduce using rule 36 (EqExp -> EqExp Eq RelExp .)
+    AND             reduce using rule 36 (EqExp -> EqExp Eq RelExp .)
+    OR              reduce using rule 36 (EqExp -> EqExp Eq RelExp .)
+    RPar            reduce using rule 36 (EqExp -> EqExp Eq RelExp .)
+    Lt              shift and go to state 87
+    Gt              shift and go to state 88
+    Le              shift and go to state 89
+    Ge              shift and go to state 90
+
+
+state 104
+
+    (37) EqExp -> EqExp NotEq RelExp .
+    (39) RelExp -> RelExp . Lt AddExp
+    (40) RelExp -> RelExp . Gt AddExp
+    (41) RelExp -> RelExp . Le AddExp
+    (42) RelExp -> RelExp . Ge AddExp
+
+    Eq              reduce using rule 37 (EqExp -> EqExp NotEq RelExp .)
+    NotEq           reduce using rule 37 (EqExp -> EqExp NotEq RelExp .)
+    AND             reduce using rule 37 (EqExp -> EqExp NotEq RelExp .)
+    OR              reduce using rule 37 (EqExp -> EqExp NotEq RelExp .)
+    RPar            reduce using rule 37 (EqExp -> EqExp NotEq RelExp .)
+    Lt              shift and go to state 87
+    Gt              shift and go to state 88
+    Le              shift and go to state 89
+    Ge              shift and go to state 90
+
+
+state 105
+
+    (39) RelExp -> RelExp Lt AddExp .
+    (46) AddExp -> AddExp . Plus MulExp
+    (47) AddExp -> AddExp . Minus MulExp
+
+    Lt              reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    Gt              reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    Le              reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    Ge              reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    Eq              reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    NotEq           reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    AND             reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    OR              reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    RPar            reduce using rule 39 (RelExp -> RelExp Lt AddExp .)
+    Plus            shift and go to state 50
+    Minus           shift and go to state 51
+
+
+state 106
+
+    (40) RelExp -> RelExp Gt AddExp .
+    (46) AddExp -> AddExp . Plus MulExp
+    (47) AddExp -> AddExp . Minus MulExp
+
+    Lt              reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    Gt              reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    Le              reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    Ge              reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    Eq              reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    NotEq           reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    AND             reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    OR              reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    RPar            reduce using rule 40 (RelExp -> RelExp Gt AddExp .)
+    Plus            shift and go to state 50
+    Minus           shift and go to state 51
+
+
+state 107
+
+    (41) RelExp -> RelExp Le AddExp .
+    (46) AddExp -> AddExp . Plus MulExp
+    (47) AddExp -> AddExp . Minus MulExp
+
+    Lt              reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    Gt              reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    Le              reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    Ge              reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    Eq              reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    NotEq           reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    AND             reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    OR              reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    RPar            reduce using rule 41 (RelExp -> RelExp Le AddExp .)
+    Plus            shift and go to state 50
+    Minus           shift and go to state 51
+
+
+state 108
+
+    (42) RelExp -> RelExp Ge AddExp .
+    (46) AddExp -> AddExp . Plus MulExp
+    (47) AddExp -> AddExp . Minus MulExp
+
+    Lt              reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    Gt              reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    Le              reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    Ge              reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    Eq              reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    NotEq           reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    AND             reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    OR              reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    RPar            reduce using rule 42 (RelExp -> RelExp Ge AddExp .)
+    Plus            shift and go to state 50
+    Minus           shift and go to state 51
+
+
+state 109
+
+    (12) AddConstDef -> ConstDef Comma AddConstDef .
+
+    Semicolon       reduce using rule 12 (AddConstDef -> ConstDef Comma AddConstDef .)
+
+
+state 110
+
+    (14) ConstDef -> IDENT Assign ConstInitVal .
+
+    Comma           reduce using rule 14 (ConstDef -> IDENT Assign ConstInitVal .)
+    Semicolon       reduce using rule 14 (ConstDef -> IDENT Assign ConstInitVal .)
+
+
+state 111
+
+    (16) ConstInitVal -> AddExp .
+    (46) AddExp -> AddExp . Plus MulExp
+    (47) AddExp -> AddExp . Minus MulExp
+
+    Comma           reduce using rule 16 (ConstInitVal -> AddExp .)
+    Semicolon       reduce using rule 16 (ConstInitVal -> AddExp .)
+    Plus            shift and go to state 50
+    Minus           shift and go to state 51
+
+
+state 112
+
+    (59) Exps -> Comma Exp .
+
+    RPar            reduce using rule 59 (Exps -> Comma Exp .)
+
+
+state 113
+
+    (29) Stmt -> If LPar Cond RPar Stmt Else . Stmt
+    (23) Stmt -> . Semicolon
+    (24) Stmt -> . Block
+    (25) Stmt -> . Exp Semicolon
+    (26) Stmt -> . Return Exp Semicolon
+    (27) Stmt -> . LVal Assign Exp Semicolon
+    (28) Stmt -> . If LPar Cond RPar Stmt
+    (29) Stmt -> . If LPar Cond RPar Stmt Else Stmt
+    (4) Block -> . LBrace AddBlock RBrace
+    (44) Exp -> . AddExp
+    (43) LVal -> . IDENT
+    (45) AddExp -> . MulExp
+    (46) AddExp -> . AddExp Plus MulExp
+    (47) AddExp -> . AddExp Minus MulExp
+    (48) MulExp -> . UnaryExp
+    (49) MulExp -> . MulExp Div UnaryExp
+    (50) MulExp -> . MulExp Mult UnaryExp
+    (51) MulExp -> . MulExp Mod UnaryExp
+    (52) UnaryExp -> . PrimaryExp
+    (53) UnaryExp -> . Plus UnaryExp
+    (54) UnaryExp -> . Minus UnaryExp
+    (55) UnaryExp -> . SysFunc LPar RPar
+    (56) UnaryExp -> . SysFunc LPar FuncRParams RPar
+    (60) PrimaryExp -> . LPar Exp RPar
+    (61) PrimaryExp -> . Number
+    (62) PrimaryExp -> . LVal
+    (63) Number -> . DECIMAL
+    (64) Number -> . OCTAL
+    (65) Number -> . HEXADECIMAL
+
+    Semicolon       shift and go to state 16
+    Return          shift and go to state 19
+    If              shift and go to state 21
+    LBrace          shift and go to state 9
+    IDENT           shift and go to state 26
+    Plus            shift and go to state 29
+    Minus           shift and go to state 30
+    SysFunc         shift and go to state 33
+    LPar            shift and go to state 22
+    DECIMAL         shift and go to state 35
+    OCTAL           shift and go to state 36
+    HEXADECIMAL     shift and go to state 37
+
+    Stmt                           shift and go to state 114
+    Block                          shift and go to state 17
+    Exp                            shift and go to state 18
+    LVal                           shift and go to state 20
+    AddExp                         shift and go to state 25
+    MulExp                         shift and go to state 28
+    UnaryExp                       shift and go to state 31
+    PrimaryExp                     shift and go to state 32
+    Number                         shift and go to state 34
+
+state 114
+
+    (29) Stmt -> If LPar Cond RPar Stmt Else Stmt .
+
+    Semicolon       reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    Return          reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    If              reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    Const           reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    LBrace          reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    IDENT           reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    Int             reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    Plus            reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    Minus           reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    SysFunc         reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    LPar            reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    DECIMAL         reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    OCTAL           reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    HEXADECIMAL     reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    RBrace          reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+    Else            reduce using rule 29 (Stmt -> If LPar Cond RPar Stmt Else Stmt .)
+
+WARNING: 
+WARNING: Conflicts:
+WARNING: 
+WARNING: shift/reduce conflict for Else in state 100 resolved as shift

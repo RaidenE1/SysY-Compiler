@@ -91,16 +91,66 @@ def p_InitVal(p):
     p[0] = p[1]
 
 def p_Stmt(p):
-    ''' Stmt : Return Exp Semicolon 
+    ''' Stmt : Semicolon
+             | Block
+             | Exp Semicolon 
+             | Return Exp Semicolon 
              | LVal Assign Exp Semicolon
-             | Exp Semicolon '''
-    if len(p) == 4:
+             | If LPar Cond RPar Stmt 
+             | If LPar Cond RPar Stmt Else Stmt '''
+    if len(p) == 2:
+        p[0] = p[1]
+    elif len(p) == 3:
+        p[0] = AstNode('NT', [p[1], p[2]], 'ExpSemi')
+    elif len(p) == 4:
         p[0] = AstNode('NT', [p[1], p[2], p[3]], 'return')
     elif len(p) == 5:
         p[0] = AstNode('NT', [p[1], p[2], p[3], p[4]], 'VarAssign')
+    elif len(p) == 6:
+        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5]], 'IfElse')
     else:
-        p[0] = AstNode('NT', [p[1], p[2]], 'Single')
+        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5], p[6], p[7]], 'IfElse')
 
+def p_Cond(p):
+    ''' Cond : LOrExp '''
+    p[0] = p[1]
+
+def p_LOrExp(p):
+    ''' LOrExp : LAndExp
+               | LOrExp OR LAndExp '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'LOrExp')
+
+def p_LAndExp(p):
+    ''' LAndExp : EqExp
+                | LAndExp AND EqExp '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'LAndExp')
+
+def p_EqExp(p):
+    ''' EqExp : RelExp
+              | EqExp Eq RelExp 
+              | EqExp NotEq RelExp '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'EqExp')
+
+def p_RelExp(p):
+    ''' RelExp : AddExp
+               | RelExp Lt AddExp
+               | RelExp Gt AddExp
+               | RelExp Le AddExp
+               | RelExp Ge AddExp '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'RelExp')
+    
 def p_LVal(p):
     ''' LVal : IDENT '''
     p[0] = AstNode('T', None, 'Ident', p[1], False)
@@ -174,10 +224,10 @@ def p_Number(p):
     p[0] = AstNode('T', None, 'Number', p[1])
 
 def p_error(p):
-    # sys.exit(1)
-    print("Error de sintaxis", p)
-    print(p.value)
-    print("Error en linea: "+ str(p.lineno))
+    sys.exit(1)
+    # print("Error de sintaxis", p)
+    # print(p.value)
+    # print("Error en linea: "+ str(p.lineno))
 
 def run_parser(text, lexer):
     parser = yacc.yacc(start = 'CompUnit')
