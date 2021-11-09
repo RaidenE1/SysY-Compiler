@@ -83,6 +83,21 @@ def operate_exp(n):
                     FILE_OUT.write(res[0] + '\n')
                     LOC += 1
                     return '%x' + str(LOC - 1), False
+            elif op == '!':
+                res = operate_exp(n.children[1])
+                loc = res[0]
+                if res[1]:
+                    FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res[0]))
+                    LOC += 1
+                    loc = '%x' + str(LOC - 1)
+                # print('-load')
+                # FILE_OUT.write('%%x%d = zext i1 %s to i32\n' %(LOC, loc))
+                # LOC += 1
+                FILE_OUT.write("%%x%d = icmp eq i32 %%x%d, 0\n" % (LOC, LOC - 1))
+                LOC += 1
+                FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
+                LOC += 1
+                return '%x' + str(LOC - 1), False
         else:
             print("UnaryExp Error")
     elif n.name == 'SysFuncExp':
@@ -177,6 +192,8 @@ def operate_exp(n):
             assert op is not None
             FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
             LOC += 1
+            FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
+            LOC += 1
             return '%x' + str(LOC - 1), False
         else:
             print('RelExp len Error')
@@ -193,6 +210,8 @@ def operate_exp(n):
             assert op is not None
             FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
             LOC += 1
+            FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
+            LOC += 1
             return '%x' + str(LOC - 1), False
         else:
             print('EqExp len Error')
@@ -201,7 +220,7 @@ def operate_exp(n):
         if len(n.children) == 3:
             op1 = operate_exp(n.children[0])[0]
             op2 = operate_exp(n.children[2])[0]
-            FILE_OUT.write('%%x%d = and i1 %s, %s\n' % (LOC, op1, op2))
+            FILE_OUT.write('%%x%d = and i32 %s, %s\n' % (LOC, op1, op2))
             LOC += 1
             return '%x' + str(LOC - 1), False
         else:
@@ -211,7 +230,7 @@ def operate_exp(n):
         if len(n.children) == 3:
             op1 = operate_exp(n.children[0])[0]
             op2 = operate_exp(n.children[2])[0]
-            FILE_OUT.write('%%x%d = or i1 %s, %s\n' % (LOC, op1, op2))
+            FILE_OUT.write('%%x%d = or i32 %s, %s\n' % (LOC, op1, op2))
             LOC += 1
             return '%x' + str(LOC - 1), False
         else:
@@ -224,31 +243,41 @@ def operate_exp(n):
 def if_else_operator(n):
     global FILE_OUT
     global LOC
+    loc_after = 0
     assert n.name == 'IfElse'
     if len(n.children) == 5:
-        res = operate_exp(n.children[2])[0]
-        stmt = n.children[4]
+        res = operate_exp(n.children[2])
+        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+        loc0 = LOC
         LOC += 1
-        loc = LOC - 1
-        FILE_OUT.write('br i1 %s, label %%x%d\n' %(res, loc))     
-        block_operate(stmt, loc)
-        FILE_OUT.write('br label %%x%d\n' %(loc))
+        stmt = n.children[4]
+        LOC += 2
+        loc = LOC - 2
+        loc_after = LOC - 1
+        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc, loc_after))     
+        block_operate(stmt, loc, loc_after)
+        # FILE_OUT.write('br label %%x%d\n' %(loc))
     elif len(n.children) == 7:
-        res = operate_exp(n.children[2])[0]
+        res = operate_exp(n.children[2])
+        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+        loc0 = LOC
+        LOC += 1
         stmt1 = n.children[4]
         stmt2 = n.children[6]
-        LOC += 2
-        loc1 = LOC - 2
-        loc2 = LOC - 1
-        FILE_OUT.write('br i1 %s, label %%x%d, label %%x%d\n' %(res, loc1, loc2))
-        block_operate(stmt1, loc1)
-        FILE_OUT.write('br label %%x%d\n' %(loc2))
-        block_operate(stmt2, loc2)
+        LOC += 3
+        loc1 = LOC - 3
+        loc2 = LOC - 2
+        loc_after = LOC - 1
+        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc1, loc2))
+        block_operate(stmt1, loc1, loc_after)
+        # FILE_OUT.write('br label %%x%d\n' %(loc2))
+        block_operate(stmt2, loc2, loc_after)
     else:
         print('IfElse len Error')
         sys.exit()
+    FILE_OUT.write('x%d:\n'%(loc_after))
 
-def block_operate(n, loc):
+def block_operate(n, loc, loc_after):
     global FILE_OUT
     global LOC 
     FILE_OUT.write('x%d:\n' % (loc))
@@ -256,6 +285,8 @@ def block_operate(n, loc):
         if_else_operator(n)
     else:
         LDR(n, True)
+    FILE_OUT.write('br label %%x%d\n' % (loc_after))
+    
 
                 
 def print_node(n):
@@ -291,7 +322,6 @@ def LDR(n, ignore = False):
                     VALUE_MAP[var.val] = var
                     FILE_OUT.write('%%x%d = alloca i32\n' % (var.loc))
                 res = operate_exp(n.children[2])[0]
-                print(res)
                 FILE_OUT.write('store i32 %s, i32* %%x%d ' %(str(res), VALUE_MAP[var.val].loc))
             else:
                 var.loc = LOC
