@@ -3,63 +3,76 @@ from ply import lex
 import tokrules
 from tokrules import tokens
 from parser_modules import run_parser
-from ast_modules import AstNode
+from ast_modules import *
 
 FILE_IN = None
 FILE_OUT = None
 
-VALUE_MAP = dict()
 LOC = 1
+GLOBAL_LOC = 1
+DOMAIN_LOC = 1
 
 def lexer_init(text):
     lexer = lex.lex(module = tokrules)
     lexer.input(text)
     return lexer
 
-def check_val(n):
+def find_var_in_domain(domain, name):
+    if not domain:
+        return None
+    for idx, item in enumerate(domain.item_tab):
+        if item.name == name:
+            return item
+    return None
+
+def find_var_cross_domain(domain, name):
+    while domain:
+        item = find_var_in_domain(domain, name)
+        if item:
+            return item
+        else:
+            domain = domain.father
+    return None
+
+def check_val(n, domain):
     if isinstance(n, AstNode):
         if n.type == 'T':
             if n.name == 'Ident':
-                if not VALUE_MAP[n.val].const:
-                    return True
-                else:
-                    return False
-            else:
-                return False
+                item = find_var_cross_domain(domain, n.val)
+                if (not item) or item._type == 'Var':
+                    sys.exit(1)
         else:
-            flag = False
             for child in n.children:
-                flag = flag or check_val(child)
-            return flag
-    else:
-        return False
+                check_val(child, domain)
 
-def operate_exp(n):
+def operate_exp(n, cur_domain, glob = False):
     global VALUE_MAP
     global FILE_OUT
     global LOC
     assert n.name[-3:] == 'Exp'
     if n.name == 'PriExp':
         if len(n.children) == 1:
-            res = n.children[0]
-            if res.name == 'Number':
-                return res.val, False
-            elif res.name == 'Ident':
-                if res.val not in VALUE_MAP.keys():
-                    exit(1)
+            var = n.children[0]
+            if var.name == 'Number':
+                return var.val, False
+            elif var.name == 'Ident':
+                item = find_var_cross_domain(cur_domain, var.val)
+                if not item:
+                    sys.exit(1)
+                if glob:
+                    return item.val, False
                 LOC += 1
-                FILE_OUT.write('%%x%d = load i32, i32* %%x%d\n' % (LOC - 1, VALUE_MAP[res.val].loc))
-                # print('pri load')
+                FILE_OUT.write('%%x%d = load i32, i32* %s\n' % (LOC - 1, item.loc))
                 return '%x' + str(LOC - 1), False
             else:
                 print("not int not str")
         else: 
-            return operate_exp(n.children[1])
+            return operate_exp(n.children[1], cur_domain, glob)
     elif n.name == 'UnaryExp':
         if len(n.children) == 2:
             op = n.children[0]
             if op == '+':
-                res = operate_exp(n.children[1])
+                res = operate_exp(n.children[1], cur_domain, glob)
                 if isinstance(res[0], int):
                     return res[0], False
                 elif isinstance(res[0], str):
@@ -71,7 +84,7 @@ def operate_exp(n):
                     # print('+load')
                     return '%x' + str(LOC - 1), False
             elif op == '-':
-                res = operate_exp(n.children[1])
+                res = operate_exp(n.children[1], cur_domain, glob)
                 if isinstance(res[0], int):
                     return -res[0], False
                 elif isinstance(res[0], str):
@@ -84,15 +97,12 @@ def operate_exp(n):
                     LOC += 1
                     return '%x' + str(LOC - 1), False
             elif op == '!':
-                res = operate_exp(n.children[1])
+                res = operate_exp(n.children[1], cur_domain, glob)
                 loc = res[0]
                 if res[1]:
                     FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res[0]))
                     LOC += 1
                     loc = '%x' + str(LOC - 1)
-                # print('-load')
-                # FILE_OUT.write('%%x%d = zext i1 %s to i32\n' %(LOC, loc))
-                # LOC += 1
                 FILE_OUT.write("%%x%d = icmp eq i32 %%x%d, 0\n" % (LOC, LOC - 1))
                 LOC += 1
                 FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
@@ -102,7 +112,7 @@ def operate_exp(n):
             print("UnaryExp Error")
     elif n.name == 'SysFuncExp':
         if len(n.children) == 4:
-            param = operate_exp(n.children[2])
+            param = operate_exp(n.children[2], cur_domain, glob)
             if n.children[0] == 'putint':
                 FILE_OUT.write("call void @putint(i32 %s)\n" %(param[0]))
             elif n.children[0] == 'putch':
@@ -127,8 +137,8 @@ def operate_exp(n):
             exit(0)
     elif n.name == 'MulExp':
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])
-            op2 = operate_exp(n.children[2])
+            op1 = operate_exp(n.children[0], cur_domain, glob)
+            op2 = operate_exp(n.children[2], cur_domain, glob)
             if n.children[1] == '//':
                 if isinstance(op1[0], str) or isinstance(op2[0], str):
                     FILE_OUT.write("%%x%d = sdiv i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
@@ -159,8 +169,8 @@ def operate_exp(n):
                 exit(1)
     elif n.name == 'AddExp':
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])
-            op2 = operate_exp(n.children[2])
+            op1 = operate_exp(n.children[0], cur_domain, glob)
+            op2 = operate_exp(n.children[2], cur_domain, glob)
             if n.children[1] == '+':
                 if isinstance(op1[0], str) or isinstance(op2[0], str):
                     FILE_OUT.write("%%x%d = add i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
@@ -186,8 +196,8 @@ def operate_exp(n):
             '>=' : 'sge'
         }
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
+            op1 = operate_exp(n.children[0], cur_domain, glob)[0]
+            op2 = operate_exp(n.children[2], cur_domain, glob)[0]
             op = OpMap.get(n.children[1], None)
             assert op is not None
             FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
@@ -204,8 +214,8 @@ def operate_exp(n):
             '!=' : 'ne',
         }
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
+            op1 = operate_exp(n.children[0], cur_domain, glob)[0]
+            op2 = operate_exp(n.children[2], cur_domain, glob)[0]
             op = OpMap.get(n.children[1], None)
             assert op is not None
             FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
@@ -218,8 +228,8 @@ def operate_exp(n):
             exit(1)
     elif n.name == 'LAndExp':
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
+            op1 = operate_exp(n.children[0], cur_domain)[0]
+            op2 = operate_exp(n.children[2], cur_domain)[0]
             FILE_OUT.write('%%x%d = and i32 %s, %s\n' % (LOC, op1, op2))
             LOC += 1
             return '%x' + str(LOC - 1), False
@@ -228,8 +238,8 @@ def operate_exp(n):
             exit(1)
     elif n.name == 'LOrExp':
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
+            op1 = operate_exp(n.children[0], cur_domain)[0]
+            op2 = operate_exp(n.children[2], cur_domain)[0]
             FILE_OUT.write('%%x%d = or i32 %s, %s\n' % (LOC, op1, op2))
             LOC += 1
             return '%x' + str(LOC - 1), False
@@ -240,13 +250,13 @@ def operate_exp(n):
         print('EXP OPERATION ERROR')
         exit(1)
 
-def if_else_operator(n):
+def if_else_operator(n, cur_domain):
     global FILE_OUT
     global LOC
     loc_after = 0
     assert n.name == 'IfElse'
     if len(n.children) == 5:
-        res = operate_exp(n.children[2])
+        res = operate_exp(n.children[2], cur_domain)
         FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
         loc0 = LOC
         LOC += 1
@@ -255,10 +265,10 @@ def if_else_operator(n):
         loc = LOC - 2
         loc_after = LOC - 1
         FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc, loc_after))     
-        block_operate(stmt, loc, loc_after)
+        block_operate(stmt, loc, loc_after, cur_domain)
         # FILE_OUT.write('br label %%x%d\n' %(loc))
     elif len(n.children) == 7:
-        res = operate_exp(n.children[2])
+        res = operate_exp(n.children[2], cur_domain)
         FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
         loc0 = LOC
         LOC += 1
@@ -269,126 +279,170 @@ def if_else_operator(n):
         loc2 = LOC - 2
         loc_after = LOC - 1
         FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc1, loc2))
-        block_operate(stmt1, loc1, loc_after)
+        block_operate(stmt1, loc1, loc_after, cur_domain)
         # FILE_OUT.write('br label %%x%d\n' %(loc2))
-        block_operate(stmt2, loc2, loc_after)
+        block_operate(stmt2, loc2, loc_after, cur_domain)
     else:
         print('IfElse len Error')
         sys.exit()
     FILE_OUT.write('x%d:\n'%(loc_after))
 
-def block_operate(n, loc, loc_after):
+def block_operate(n, loc, loc_after, cur_domain):
     global FILE_OUT
     global LOC 
+    global DOMAIN_LOC
     FILE_OUT.write('x%d:\n' % (loc))
+    domain = Domain(DOMAIN_LOC, children = None, father = cur_domain)
+    cur_domain.children.append(domain)
     if n.name == 'IfElse':
-        if_else_operator(n)
+        if_else_operator(n, domain)
     else:
-        LDR(n, True)
-    FILE_OUT.write('br label %%x%d\n' % (loc_after))
+        LDR(n, True, domain)
+    FILE_OUT.write('br label %%x%d\n' % (loc_after))   
     
-
-                
-def print_node(n):
+def print_node(child, ignore):
     global FILE_OUT
-    global VALUE_MAP
-    if isinstance(n.val, int):
-        FILE_OUT.write('i32 ' + str(n.val) + ' ')
-    elif n.name == 'Ident':
-        FILE_OUT.write('%%%d' % (n.loc))
-    elif n.val == 'int':
-        return 
+    if child == '{' or child == '}':
+        if ignore:
+            pass
+        else:
+            FILE_OUT.write(child + '\n')
+    elif child == ';' or child == ',':
+        FILE_OUT.write('\n')
+    elif child == 'int':
+        if ignore:
+            pass
+        else:
+            FILE_OUT.write('i32 ')
+    elif child == 'main':
+        FILE_OUT.write('@main ')
+    elif child == 'return':
+        FILE_OUT.write('ret i32 ')
+    elif child == 'const':
+        pass
     else:
-        FILE_OUT.write(str(n.val) + ' ')
+        FILE_OUT.write(child + ' ')
 
-def LDR(n, ignore = False):
+def LDR(n, ignore = False, cur_domain = None, glob = False):
     if n != None and n.type != 'T':
         global FILE_OUT
-        global VALUE_MAP
+        global DOMAIN_LOC
         global LOC
-        # print(n.name)
-        if n.name == 'FuncDef':
+        global GLOBAL_LOC
+        # print(cur_domain)
+        if n.name == "MulDef":
+            LDR(n.children[0], ignore, cur_domain, True)
+            LDR(n.children[1], ignore, cur_domain)
+            return
+        elif n.name == 'FuncDef':
             FILE_OUT.write('define dso_local ')
+        elif n.name == "Block":
+            domain_num = DOMAIN_LOC
+            DOMAIN_LOC += 1
+            domain = Domain(domain_num, father = cur_domain)
+            if cur_domain:
+                cur_domain.children.append(domain)
+            if not cur_domain.father:
+                print_node(n.children[0], ignore)
+            LDR(n.children[1], ignore = ignore, cur_domain = domain)
+            if not cur_domain.father:
+                print_node(n.children[2], ignore)
+            return
+        elif n.name == 'VarDecl':
+            LDR(n.children[1], ignore, cur_domain, glob)
+            return 
+        elif n.name == 'ConstDecl':
+            LDR(n.children[2], ignore, cur_domain, glob)
+            return 
         elif n.name == 'VarDef':
             var = n.children[0]
             # print(var.val)
             assert var.name == 'Ident'
-            if len(n.children) == 3:
-                if var.val in VALUE_MAP.keys():
-                    old_node = VALUE_MAP[var.val]
+            item = find_var_in_domain(cur_domain, var.val)
+            if item:
+                print("duplicate var define of %s\n" % (var.val))
+                sys.exit(0)
+            if glob:
+                res = 0
+                if len(n.children) == 3:
+                    check_val(n.children[2], cur_domain)
+                    res = operate_exp(n.children[2], cur_domain, glob)[0]
+                    FILE_OUT.write('@g%d = dso_local global i32 %d\n' %(GLOBAL_LOC, res))
                 else:
-                    var.loc = LOC 
-                    LOC += 1
-                    VALUE_MAP[var.val] = var
-                    FILE_OUT.write('%%x%d = alloca i32\n' % (var.loc))
-                res = operate_exp(n.children[2])[0]
-                FILE_OUT.write('store i32 %s, i32* %%x%d ' %(str(res), VALUE_MAP[var.val].loc))
+                    FILE_OUT.write('@g%d = dso_local global i32 %d\n' %(GLOBAL_LOC, res))
+                cur_domain.item_tab.append(SymbolItem("Var", "int", var.val, cur_domain, '@g' + str(GLOBAL_LOC), res))
+                GLOBAL_LOC += 1
+                return
+            item = SymbolItem(_type = "Var", dataType = "int", name = var.val, domain = cur_domain, loc = '%x' + str(LOC))
+            LOC += 1
+            cur_domain.item_tab.append(item)
+            if len(n.children) == 3:
+                FILE_OUT.write('%s = alloca i32\n' % (item.loc))
+                res = operate_exp(n.children[2], cur_domain)[0]
+                FILE_OUT.write('store i32 %s, i32* %s\n' %(str(res), item.loc))
             else:
-                var.loc = LOC
-                LOC += 1
-                VALUE_MAP[var.val] = var
-                FILE_OUT.write('%%x%d = alloca i32\n' % (var.loc))
+                FILE_OUT.write('%s = alloca i32\n' % (item.loc))
             return
         elif n.name == 'ConstDef':
             var = n.children[0]
-            var.loc = LOC 
-            LOC += 1
-            VALUE_MAP[var.val] = var
-            FILE_OUT.write('%%x%d = alloca i32\n' % (var.loc))
-            if check_val(n.children[2]):
+            item = find_var_in_domain(cur_domain, var.val)
+            if item:
+                print("duplicate const define of %s\n" % (var.val))
                 sys.exit(1)
-            res = operate_exp(n.children[2])[0]
-            FILE_OUT.write('store i32 %s, i32* %%x%d' %(str(res),var.loc))
+            if glob:
+                res = 0
+                if len(n.children) == 3:
+                    check_val(n.children[2], cur_domain)
+                    res = operate_exp(n.children[2], cur_domain, glob)[0]
+                    FILE_OUT.write('@g%d = dso_local global i32 %d\n' %(GLOBAL_LOC, res))
+                else:
+                    FILE_OUT.write('@g%d = dso_local global i32 %d\n' %(GLOBAL_LOC, res))
+                cur_domain.item_tab.append(SymbolItem("Const", "int", var.val, cur_domain, '%g' + str(GLOBAL_LOC), res))
+                GLOBAL_LOC += 1
+                return
+            item = SymbolItem(_type = "Const", dataType = "int", name = var.val, domain = cur_domain, loc = '%x' + str(LOC))
+            cur_domain.item_tab.append(item)
+            LOC += 1
+            FILE_OUT.write('%s = alloca i32\n' % (item.loc))
+            check_val(n.children[2], cur_domain)
+            res = operate_exp(n.children[2], cur_domain)[0]
+            FILE_OUT.write('store i32 %s, i32* %s\n' %(str(res), item.loc))
             return 
         elif n.name == 'VarAssign':
             var = n.children[0]
             assert var.name == 'Ident'
-            if var.val in VALUE_MAP.keys():
-                old_node = VALUE_MAP[var.val]
-                if old_node.const == True:
+            item = find_var_cross_domain(cur_domain, var.val)
+            if item:
+                if item._type == 'Const':
                     sys.exit(1)
                 else:
-                    res = operate_exp(n.children[2])[0]
-                    FILE_OUT.write('store i32 %s, i32* %%x%d \n' %(str(res), old_node.loc))
-            else:
-                sys.exit(1)
-            return 
+                    res = operate_exp(n.children[2], cur_domain)[0]
+                    FILE_OUT.write('store i32 %s, i32* %s\n' %(str(res), item.loc))
+                    return
+            sys.exit(1)
         elif n.name == 'return':
-            op = operate_exp(n.children[1])
+            op = operate_exp(n.children[1], cur_domain)
             FILE_OUT.write('ret i32 ' + str(op[0]) + '\n')
             return 
         elif n.name == 'IfElse':
-            if_else_operator(n)
+            if_else_operator(n, cur_domain)
             return 
         elif n.name[-3:] == 'Exp':
-            operate_exp(n)
+            operate_exp(n, cur_domain)
             return
 
         for idx, child in enumerate(n.children):
             if isinstance(child, AstNode):
                 if child.type == 'T':
-                    print_node(child)
-                else:
-                    LDR(child)
-            else:
-                if child == '{' or child == '}':
-                    if ignore:
+                    if child.val == 'int' or n.val == 'const':
                         continue
                     else:
-                        FILE_OUT.write(child + '\n')
-                elif child == ';' or child == ',':
-                    FILE_OUT.write('\n')
-                elif child == 'int':
-                    FILE_OUT.write('i32 ')
-                elif child == 'main':
-                    FILE_OUT.write('@main ')
-                elif child == 'return':
-                    FILE_OUT.write('ret i32 ')
-                elif child == 'const':
-                    continue
+                        print_node(child.val, ignore)
                 else:
-                    FILE_OUT.write(child + ' ')
-
+                    LDR(child, ignore, cur_domain, glob)
+            else:
+                print_node(child, ignore)
+                
 def main(args):
     # print(tokens)
     global FILE_IN
@@ -409,7 +463,7 @@ def main(args):
     #     tok = lexer.token()
     result = run_parser(text, lexer)
     # print_out(result, output_path)
-    LDR(result)
+    LDR(result, ignore = False, cur_domain = Domain(0), glob = True)
 
     FILE_IN.close()
     FILE_OUT.close()

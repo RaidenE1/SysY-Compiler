@@ -1,194 +1,48 @@
 # Lab5 作用域与全局变量
 
 > 编译原理第五次实验
+>
+> 18351015 张津赫
 
 ## 实验内容
 
-- 本次实验结束后，编译器需要支持 `if`、`else` 条件分支语句以及条件表达式。
+- 本次实验结束后，编译器需要在 lab 4 的基础上支持变量作用域的一些区分及全局变量.
 
 ## 实现思路
 
-### 1. 条件表达式
+### 1. 作用域
 
-1. 在`paser_modules.py`中增添了如下关于条件表达式的文法：
-
-```python
-def p_LOrExp(p):
-    ''' LOrExp : LAndExp
-               | LOrExp OR LAndExp '''
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'LOrExp')
-
-def p_LAndExp(p):
-    ''' LAndExp : EqExp
-                | LAndExp AND EqExp '''
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'LAndExp')
-
-def p_EqExp(p):
-    ''' EqExp : RelExp
-              | EqExp Eq RelExp 
-              | EqExp NotEq RelExp '''
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'EqExp')
-
-def p_RelExp(p):
-    ''' RelExp : AddExp
-               | RelExp Lt AddExp
-               | RelExp Gt AddExp
-               | RelExp Le AddExp
-               | RelExp Ge AddExp '''
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'RelExp')
-```
-
-2. 以及`main.py`中对于`*Exp`节点的处理函数：
+在`ast_modules.py`中添加了两个类: `SymbolItem`和`Domain`
 
 ```python
-elif n.name == 'RelExp':
-        OpMap = {
-            '<' : 'slt',
-            '<=' : 'sle',
-            '>' : 'sgt',
-            '>=' : 'sge'
-        }
-        if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
-            op = OpMap.get(n.children[1], None)
-            assert op is not None
-            FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
-            LOC += 1
-            FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
-            LOC += 1
-            return '%x' + str(LOC - 1), False
-    elif n.name == 'EqExp':
-        OpMap = {
-            '==' : 'eq',
-            '!=' : 'ne',
-        }
-        if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
-            op = OpMap.get(n.children[1], None)
-            assert op is not None
-            FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
-            LOC += 1
-            FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
-            LOC += 1
-            return '%x' + str(LOC - 1), False
-    elif n.name == 'LAndExp':
-        if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
-            FILE_OUT.write('%%x%d = and i32 %s, %s\n' % (LOC, op1, op2))
-            LOC += 1
-            return '%x' + str(LOC - 1), False
-    elif n.name == 'LOrExp':
-        if len(n.children) == 3:
-            op1 = operate_exp(n.children[0])[0]
-            op2 = operate_exp(n.children[2])[0]
-            FILE_OUT.write('%%x%d = or i32 %s, %s\n' % (LOC, op1, op2))
-            LOC += 1
-            return '%x' + str(LOC - 1), False
+class SymbolItem: # 符号表
+    def __init__(self, _type, dataType, name, domain, loc, val = None):
+        self._type = _type # ID类型，变量，数组，函数
+        self.dataType = dataType
+        self.name = name # ID名字
+        self.domain = domain
+        self.loc = loc
+        self.val = val
+
+class Domain: # 作用域
+    def __init__(self, num, children = None, father = None):
+        self.num = num
+        if not children:
+            self.children = []
+        else:
+            self.children = children
+        self.father = father
+        self.item_tab = []
 ```
 
-对于每次涉及到`icmp`的操作，因为结果为`i1`类型，后续处理不方便，所以再次使用一个`zext`函数转为i32类型。即在所有`*Exp`节点的处理和运算中，返回的寄存器均为装在i32类型的寄存器，或者一个i32类型的整数。
+- `SymbolItem`和`AstNode`区别不大
 
-### 2. `if-else`语句
+- `Domain`类标记一个作用域，其中`num`为作用域标号，~~可能没什么用？~~，`children`是这个作用域内的定义的所有子作用域的列表，`father`表示包含这个作用域的父作用域，即`father`作用域内定义了`self`。现在整个代码的所有作用域被构建成了一棵树。最外层是全局变量的作用域。在查询变量是否被定义时，从`cur_domain`的`item_tab`查起，递归查找`cur_domain.father`，直到找到定义变量的作用域或者`cur_domain == None`为止。
+- item_tab代表变量表，储存在作用域内有效的局部变量，内含元素为`SymbolItem`的对象。
 
-1. 在`paser_modules.py`中增添了如下关于条件表达式的文法：
+### 2. 全局变量
 
-```python
-def p_Stmt(p):
-    ''' Stmt : Semicolon
-             | Block
-             | Exp Semicolon 
-             | Return Exp Semicolon 
-             | LVal Assign Exp Semicolon
-             | If LPar Cond RPar Stmt 
-             | If LPar Cond RPar Stmt Else Stmt '''
-    if len(p) == 2:
-        p[0] = p[1]
-    elif len(p) == 3:
-        p[0] = AstNode('NT', [p[1], p[2]], 'ExpSemi')
-    elif len(p) == 4:
-        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'return')
-    elif len(p) == 5:
-        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4]], 'VarAssign')
-    elif len(p) == 6:
-        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5]], 'IfElse')
-    else:
-        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5], p[6], p[7]], 'IfElse')
-
-def p_Cond(p):
-    ''' Cond : LOrExp '''
-    p[0] = p[1]
-```
-
-为`if-else`节点设置单独的`name`，并且通过`children`列表来判断是否有`else`表达式。
-
-2. 以及`main.py`中对于`IfElse`节点的处理函数：
-
-```python
-def if_else_operator(n):
-    global FILE_OUT
-    global LOC
-    loc_after = 0
-    assert n.name == 'IfElse'
-    if len(n.children) == 5:
-        res = operate_exp(n.children[2])
-        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
-        loc0 = LOC
-        LOC += 1
-        stmt = n.children[4]
-        LOC += 2
-        loc = LOC - 2
-        loc_after = LOC - 1
-        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc, loc_after))     
-        block_operate(stmt, loc, loc_after)
-        # FILE_OUT.write('br label %%x%d\n' %(loc))
-    elif len(n.children) == 7:
-        res = operate_exp(n.children[2])
-        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
-        loc0 = LOC
-        LOC += 1
-        stmt1 = n.children[4]
-        stmt2 = n.children[6]
-        LOC += 3
-        loc1 = LOC - 3
-        loc2 = LOC - 2
-        loc_after = LOC - 1
-        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc1, loc2))
-        block_operate(stmt1, loc1, loc_after)
-        # FILE_OUT.write('br label %%x%d\n' %(loc2))
-        block_operate(stmt2, loc2, loc_after)
-    FILE_OUT.write('x%d:\n'%(loc_after))
-
-def block_operate(n, loc, loc_after):
-    global FILE_OUT
-    global LOC 
-    FILE_OUT.write('x%d:\n' % (loc))
-    if n.name == 'IfElse':
-        if_else_operator(n)
-    else:
-        LDR(n, True)
-    FILE_OUT.write('br label %%x%d\n' % (loc_after))
-```
-
-- 首先依据`children`列表的长度判断是不是需要`else`，然后处理`cond`，在准备br跳转前先将`LOC`变量增加多个，为`if`和`else`的代码块留出位置，然后将`stmt`块节点用`block_operate()`函数处理。
-- 在`block_operate()`函数中，输入的节点均为`stmt`，而对与`stmt`节点，还需要判断时普通的代码还是嵌套的`if-else`，如果是嵌套的`if-else`则须递归调用`if-else-operator()`。
-- 若为普通代码，则调用`LDR()`中序遍历子树输出。
-- 最后在结尾加上强制跳转到`loc_after`代码块的命令，`loc_after`是在之前预留的一个位置，表示整个`if-else`结束后的代码例如return等的代码块。
-
+全局变量
 
 ## 问题
 

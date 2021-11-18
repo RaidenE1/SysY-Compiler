@@ -5,8 +5,16 @@ from tokrules import tokens
 from ast_modules import AstNode
 
 def p_CompUnit(p):
-    ''' CompUnit : FuncDef '''
+    ''' CompUnit : MulDef '''
     p[0] = p[1]
+
+def p_MulDef(p):
+    ''' MulDef : Decl MulDef
+               | FuncDef '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = AstNode('NT', [p[1], p[2]], 'MulDef')
 
 def p_FuncDef(p):
     ''' FuncDef : FuncType Main LPar RPar Block'''
@@ -61,10 +69,6 @@ def p_BType(p):
 def p_ConstInitVal(p):
     ''' ConstInitVal : AddExp '''
     p[0] = p[1]
-
-# def p_ConstExp(p):
-#     ''' ConstExp : AddExp '''
-#     p[0] = p[1]
     
 def p_VarDecl(p):
     ''' VarDecl : BType AddVarDef Semicolon '''
@@ -225,10 +229,10 @@ def p_Number(p):
     p[0] = AstNode('T', None, 'Number', p[1])
 
 def p_error(p):
-    sys.exit(1)
-    # print("Error de sintaxis", p)
-    # print(p.value)
-    # print("Error en linea: "+ str(p.lineno))
+    # sys.exit(1)
+    print("Error de sintaxis", p)
+    print(p.value)
+    print("Error en linea: "+ str(p.lineno))
 
 def run_parser(text, lexer):
     parser = yacc.yacc(start = 'CompUnit')
