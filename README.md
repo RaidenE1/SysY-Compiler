@@ -1,4 +1,4 @@
-# Compiler-of-SysY-Programming-Language
+# SysY-Compiler
 
 
 > 北京航空航天大学软件学院1921级编译原理课程实验
@@ -11,12 +11,12 @@
 
 ```
 ├── src
-   ├── main.py //函数的入口以及主体部分，包括读取文件、处理代码、生成IR文件和输出
-   ├── parser_modules.py //yacc的构建和语法规则
+   ├── main.py // 函数的入口以及主体部分，包括读取文件、处理代码、生成IR文件和输出
+   ├── parser_modules.py // yacc的构建和语法规则
    ├── tokrules.py // 关于lexer识别token的正则表达式以及错误处理
-   ├── ast_modules.py //语法树的节点类
-   ├── Dockerfile //评测时构建镜像的依赖，参考 /test/ 下的说明
-   ├── judge.toml //测评的依据，参考 /test/ 下的说明
+   ├── ast_modules.py // 语法树的节点类
+   ├── Dockerfile // 评测时构建镜像的依赖，参考 /test/ 下的说明
+   ├── judge.toml // 测评的依据，参考 /test/ 下的说明
    
 ```
 
