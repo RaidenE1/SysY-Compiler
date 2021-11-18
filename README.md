@@ -3,13 +3,12 @@
 
 > 北京航空航天大学软件学院1921级编译原理课程实验
 
-## 参考
 
-PLY的说明参见[此处](http://www.dabeaz.com/ply/ply.html)
 
 实验要求参见[此处](https://github.com/BUAA-SE-Compiling/miniSysY-tutorial) 
 
 评测机地址[戳戳](https://oj.karenia.cc/dashboard)
+
 
 本项目采用python语言编写，使用PLY进行词法分析和语法分析，构建的一种类C语言的编译器。只处理前端代码到LLVM IR的部分，目的是生成可以正确解释的LLVM IR文件。
 
@@ -33,8 +32,6 @@ python main.py testin.in testout.ll //生成LLVM IR文件
 lli testout.ll
 ```
 
-
-
 ## 说明
 
 - [src](./src/) 目录下是整个编译器完整的代码
@@ -50,3 +47,8 @@ lli testout.ll
 - [lab4](./Labs/lab4/) Accepted on Nov 9,2021
 - [lab5](./Labs/lab5/) Accepted on Nov 18,2021
 - [lab6](./Labs/lab6/) yet to come ......
+
+
+## 参考文档
+
+PLY的说明文档参见[此处](http://www.dabeaz.com/ply/ply.html)
