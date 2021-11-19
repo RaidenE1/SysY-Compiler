@@ -22,19 +22,26 @@
    ├── ast_modules.py // 语法树的节点类
    ├── Dockerfile // 评测时构建镜像的依赖，参考 /test/ 下的说明
    ├── judge.toml // 测评的依据，参考 /test/ 下的说明
-   
+├── libsysy // 库函数
+   ├── libsysy.c
+   ├── libsysy.h
 ```
 
 参考运行命令：
 
 ```bash
-python main.py testin.in testout.ll //生成LLVM IR文件
-lli testout.ll
+cd $HOME_PATH/src // 进入代码所在目录
+cp ../libsysy/* ./ //将头文件从源文件夹中移入src
+python main.py testin.in testout.ll // 生成LLVM IR文件
+clang -emit-llvm -S libsysy.c -o lib.ll  // clang编译头文件
+llvm-link testout.ll lib.ll  -o out.ll  // 链接生成out.ll
+lli out.ll // 解释out.ll
 ```
 
 ## 说明
 
 - [src](./src/) 目录下是整个编译器完整的代码
+- [libsysy](./libsysy/) 目录下是SysY语言需要链接的库
 - 具体测试，包括`Dockerfile`和`judge.toml`的编写要求可以参照 [test](./test/) 目录下的说明
 - 其中[Labs](./Labs/)目录下是每一次实验的代码，经过多次重构和迭代，功能可能有所重复，但可以对照实验需求观察迭代的过程。
 
