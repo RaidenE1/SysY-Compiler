@@ -1,129 +1,101 @@
-# Lab5 作用域与全局变量
+# Lab6 循环
 
-> 编译原理第五次实验
+> 编译原理第六次实验
 
 ## 实验内容
 
-- 本次实验结束后，编译器需要在 lab 4 的基础上支持变量作用域的一些区分及全局变量.
+- 本次实验结束后，编译器需要在 lab 5 的基础上支持 `while` 循环、`continue` 和 `break` 语句。
 
 ## 实现思路
 
-### 1. 作用域
+### 1. while循环
 
-在`ast_modules.py`中添加了两个类: `SymbolItem`和`Domain`
-
-```python
-class SymbolItem: # 符号表
-    def __init__(self, _type, dataType, name, domain, loc, val = None):
-        self._type = _type # ID类型，变量，数组，函数
-        self.dataType = dataType
-        self.name = name # ID名字
-        self.domain = domain
-        self.loc = loc
-        self.val = val
-
-class Domain: # 作用域
-    def __init__(self, num, children = None, father = None):
-        self.num = num
-        if not children:
-            self.children = []
-        else:
-            self.children = children
-        self.father = father
-        self.item_tab = []
-```
-
-- `SymbolItem`和`AstNode`区别不大
-
-- `Domain`类标记一个作用域，其中`num`为作用域标号，~~可能没什么用？~~，`children`是这个作用域内的定义的所有子作用域的列表，`father`表示包含这个作用域的父作用域，即`father`作用域内定义了`self`。现在整个代码的所有作用域被构建成了一棵树。最外层是全局变量的作用域。在查询变量是否被定义时，从`cur_domain`的`item_tab`查起，递归查找`cur_domain.father`，直到找到定义变量的作用域或者`cur_domain == None`为止。
-
-  定义如下两个函数方便查找：
-
-  ```python
-  def find_var_in_domain(domain, name):
-      if not domain:
-          return None
-      for idx, item in enumerate(domain.item_tab):
-          if item.name == name:
-              return item
-      return None
-  
-  def find_var_cross_domain(domain, name):
-      while domain:
-          item = find_var_in_domain(domain, name)
-          if item:
-              return item
-          else:
-              domain = domain.father
-      return None
-  ```
-
-  - `find_var_in_domain`是在作用域内寻找同名变量。
-  - `find_var_cross_domain`是沿着作用域树的叶节点向上递归查找，直到找到定义或者查询到跟节点为止。
-  - 二者均返回None(未找到)，或者定义的变量(SymbolItem类型)。
-
-- item_tab代表变量表，储存在作用域内有效的局部变量，内含元素为`SymbolItem`的对象。
-
-### 2. 全局变量
-
-全局变量定义新的文法：
+其实与`If-Else`类似，新建基本块，但在结尾需要加入判断条件，如果条件仍成立那么需要跳转到基本块头部，构成循环。万幸的是在`block_operate`函数中已经搭建好了类似的逻辑：
 
 ```python
-def p_CompUnit(p):
-    ''' CompUnit : MulDef '''
-    p[0] = p[1]
-
-def p_MulDef(p):
-    ''' MulDef : Decl MulDef
-               | FuncDef '''
-    if len(p) == 2:
-        p[0] = p[1]
+def block_operate(n, loc, loc_after, cur_domain, cond = None, condition = None, loc_break = None, loc_continue = None):
+    global FILE_OUT
+    global LOC 
+    global DOMAIN_LOC
+    FILE_OUT.write('x%d:\n' % (loc))
+    domain = Domain(DOMAIN_LOC, children = None, father = cur_domain)
+    cur_domain.children.append(domain)
+    if not isinstance(n, AstNode):
+        print_node(n, False)
+        FILE_OUT.write('br label %%x%d\n' % (loc_after))
+        return
     else:
-        p[0] = AstNode('NT', [p[1], p[2]], 'MulDef')
+        LDR(n, True, domain, glob = False, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
+    if not cond:
+        FILE_OUT.write('br label %%x%d\n' % (loc_after)) 
+    else:
+        res = operate_exp(cond, cur_domain)
+        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+        LOC += 1
+        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc, loc_after))
 ```
 
-对于全局变量的作用域和变量定义时，向过程传入参数glob，表示是否为全局变量的操作。
+`loc`指当前基本块的序号，`loc_after`指的是当前基本块之后的基本块的序号。`cond`是*while*的条件，如果`cond`不为空的话那么在跳转的时候需要判断`cond`是否为假，否则直接跳转到`loc_after`标记的基本块就好了，而且这个变量只有在`while_operate`函数调用`block_operate`时会被传入。
+
+`while_operate`如下：
 
 ```python
-def operate_exp(n, cur_domain, glob = False):
-    global VALUE_MAP
+def while_operate(n, cur_domain):
     global FILE_OUT
     global LOC
-    # ......
-def LDR(n, ignore = False, cur_domain = None, glob = False):
+    global DOMAIN_LOC
+    cond = n.children[2]
+    stmt = n.children[4]
+    LOC += 2
+    loc = LOC - 2
+    loc_after = LOC - 1
+    res = operate_exp(cond, cur_domain)
+    FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+    LOC += 1
+    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc, loc_after))
+    LOC_BREAK = loc_after
+    LOC_CONTINUE = loc
+    block_operate(stmt, loc, loc_after, cur_domain, cond, cond, loc_after, loc)
+    FILE_OUT.write('x%d:\n'%(loc_after))
+```
+
+### 2. continue & break
+
+没有采用助教建议的回填策略。通过`while_operate`函数和`block_operate`函数的内容可以发现，在生成每一个基本块时(*while/if*)，我都会传递两个变量，一个是当前块的loc(loc)，另一个是提前预留出来的后续块的loc(loc_after)。也就是代码中全局变量`LOC`在产生每一个块的时候要+=2的原因。所以对于`break`语句，只需要跳转到`loc_after`标记的基本块。对于*continue*语句，同时传递*while*的条件，进行一个类似循环体结束时对于循环条件的判断。这也是`block_operate`中`cond`和`condition`分别的用处。
+
+在递归语法树的函数中：(`LDR`的参数也变得越来越过分了。。。)
+
+```python
+def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, loc_break = None, loc_continue = None):
     if n != None and n.type != 'T':
-        global FILE_OUT
-        global DOMAIN_LOC
-        global LOC
-        global GLOBAL_LOC
+        # ......
+        if n.name == 'Break':
+            assert loc_break is not None
+            FILE_OUT.write('br label %%x%d\n' % (loc_break))
+            return 
+        elif n.name == 'Cont':
+            assert loc_continue is not None
+            assert loc_break is not None
+            assert condition is not None
+            res = operate_exp(condition, cur_domain)
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+            LOC += 1
+            FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc_continue, loc_break))
+            return 
         # ......
 ```
 
-~~是一个非常繁琐的过程~~。其中对于全局变量的定义，检查其中的变量是否为const，或者常数，如果为var则直接非0值返回。这里调用前面写好的，对于const类型变量的检查函数：
 
-```python
-def check_val(n, domain):
-    if isinstance(n, AstNode):
-        if n.type == 'T':
-            if n.name == 'Ident':
-                item = find_var_cross_domain(domain, n.val)
-                if (not item) or item._type == 'Var':
-                    sys.exit(1)
-        else:
-            for child in n.children:
-                check_val(child, domain)
+
+## 问题
+
+1. 开始写循环时直接一个跳转进入了循环体，忽略了在第一次进入循环前也需要进行条件判断，如果不满足则直接跳转到`loc_after`.
+2. 这种写法应该会导致很多多余的条件判断，~~但可以继续堆叠屎山~~，包括之前的变量处理，对于`icmp`的结果强转`i32`，遇到下一条指令是`br`时还要强转`i1`，会导至这种情况：
+
+```
+%x9 = icmp slt i32 %x6, %x8 // 条件表达式的结果，i1类型
+%x10 = zext i1 %x9 to i32 // 代码默认转为i32类型
+%x11 = icmp ne i32 %x10, 0 // 因为需要跟据条件表达式跳转，所以还需要强转为i1类型
+br i1 %x11, label %x4, label %x5
 ```
 
-对与`*Exp`节点，同样添加glob变量。如果是glob时，那么在表达式计算遇到`Ident`的时候，不去加载寄存器，而是在当前domain里寻找，然后直接输出item.val，确保以一个可以计算的值返回。
-
-```python
-if var.name == 'Ident':
-  item = find_var_cross_domain(cur_domain, var.val)
-  if not item:
-    sys.exit(1)
-    if glob: # *
-      return item.val, False # *
-    LOC += 1
-    FILE_OUT.write('%%x%d = load i32, i32* %s\n' % (LOC - 1, item.loc))
-    return '%x' + str(LOC - 1), False
-```

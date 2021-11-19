@@ -46,7 +46,8 @@ lli testout.ll
 - [lab3](./Labs/lab3/) Accepted on Nov 5,2021
 - [lab4](./Labs/lab4/) Accepted on Nov 9,2021
 - [lab5](./Labs/lab5/) Accepted on Nov 18,2021
-- [lab6](./Labs/lab6/) yet to come ......
+- [lab6](./Labs/lab6/) Accepted on Nov 19,2021
+- [lab7](./Labs/lab7/) yet to come ......
 
 
 ## 参考文档

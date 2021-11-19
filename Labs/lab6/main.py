@@ -126,7 +126,7 @@ def operate_exp(n, cur_domain, glob = False):
                 LOC += 1
                 return '%x' + str(LOC - 1), False
             elif n.children[0] == 'getch':
-                FILE_OUT.write("%x%d = call i32 @getch()\n" %(LOC))
+                FILE_OUT.write("%%x%d = call i32 @getch()\n" %(LOC))
                 LOC += 1
                 return '%x' + str(LOC - 1), False
             else:
@@ -250,7 +250,7 @@ def operate_exp(n, cur_domain, glob = False):
         print('EXP OPERATION ERROR')
         exit(1)
 
-def if_else_operator(n, cur_domain):
+def if_else_operator(n, cur_domain, condition = None, loc_break = None, loc_continue = None):
     global FILE_OUT
     global LOC
     loc_after = 0
@@ -265,7 +265,7 @@ def if_else_operator(n, cur_domain):
         loc = LOC - 2
         loc_after = LOC - 1
         FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc, loc_after))     
-        block_operate(stmt, loc, loc_after, cur_domain)
+        block_operate(stmt, loc, loc_after, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
         # FILE_OUT.write('br label %%x%d\n' %(loc))
     elif len(n.children) == 7:
         res = operate_exp(n.children[2], cur_domain)
@@ -279,27 +279,51 @@ def if_else_operator(n, cur_domain):
         loc2 = LOC - 2
         loc_after = LOC - 1
         FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc1, loc2))
-        block_operate(stmt1, loc1, loc_after, cur_domain)
+        block_operate(stmt1, loc1, loc_after, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
         # FILE_OUT.write('br label %%x%d\n' %(loc2))
-        block_operate(stmt2, loc2, loc_after, cur_domain)
+        block_operate(stmt2, loc2, loc_after, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
     else:
         print('IfElse len Error')
         sys.exit()
     FILE_OUT.write('x%d:\n'%(loc_after))
 
-def block_operate(n, loc, loc_after, cur_domain):
+def block_operate(n, loc, loc_after, cur_domain, cond = None, condition = None, loc_break = None, loc_continue = None):
     global FILE_OUT
     global LOC 
     global DOMAIN_LOC
     FILE_OUT.write('x%d:\n' % (loc))
     domain = Domain(DOMAIN_LOC, children = None, father = cur_domain)
     cur_domain.children.append(domain)
-    if n.name == 'IfElse':
-        if_else_operator(n, domain)
+    if not isinstance(n, AstNode):
+        print_node(n, False)
+        FILE_OUT.write('br label %%x%d\n' % (loc_after))
+        return
     else:
-        LDR(n, True, domain)
-    FILE_OUT.write('br label %%x%d\n' % (loc_after))   
-    
+        LDR(n, True, domain, glob = False, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
+    if not cond:
+        FILE_OUT.write('br label %%x%d\n' % (loc_after)) 
+    else:
+        res = operate_exp(cond, cur_domain)
+        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+        LOC += 1
+        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc, loc_after))
+
+def while_operate(n, cur_domain):
+    global FILE_OUT
+    global LOC
+    global DOMAIN_LOC
+    cond = n.children[2]
+    stmt = n.children[4]
+    LOC += 2
+    loc = LOC - 2
+    loc_after = LOC - 1
+    res = operate_exp(cond, cur_domain)
+    FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+    LOC += 1
+    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc, loc_after))
+    block_operate(stmt, loc, loc_after, cur_domain, cond, cond, loc_after, loc)
+    FILE_OUT.write('x%d:\n'%(loc_after))
+
 def print_node(child, ignore):
     global FILE_OUT
     if child == '{' or child == '}':
@@ -323,13 +347,13 @@ def print_node(child, ignore):
     else:
         FILE_OUT.write(child + ' ')
 
-def LDR(n, ignore = False, cur_domain = None, glob = False):
+def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, loc_break = None, loc_continue = None):
     if n != None and n.type != 'T':
         global FILE_OUT
         global DOMAIN_LOC
         global LOC
         global GLOBAL_LOC
-        # print(cur_domain)
+        # print(n.name, condition, loc_break, loc_continue)
         if n.name == "MulDef":
             LDR(n.children[0], ignore, cur_domain, True)
             LDR(n.children[1], ignore, cur_domain)
@@ -344,7 +368,7 @@ def LDR(n, ignore = False, cur_domain = None, glob = False):
                 cur_domain.children.append(domain)
             if not cur_domain.father:
                 print_node(n.children[0], ignore)
-            LDR(n.children[1], ignore = ignore, cur_domain = domain)
+            LDR(n.children[1], ignore = ignore, cur_domain = domain, glob = False, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
             if not cur_domain.father:
                 print_node(n.children[2], ignore)
             return
@@ -397,7 +421,7 @@ def LDR(n, ignore = False, cur_domain = None, glob = False):
                     FILE_OUT.write('@g%d = dso_local global i32 %d\n' %(GLOBAL_LOC, res))
                 else:
                     FILE_OUT.write('@g%d = dso_local global i32 %d\n' %(GLOBAL_LOC, res))
-                cur_domain.item_tab.append(SymbolItem("Const", "int", var.val, cur_domain, '%g' + str(GLOBAL_LOC), res))
+                cur_domain.item_tab.append(SymbolItem("Const", "int", var.val, cur_domain, '@g' + str(GLOBAL_LOC), res))
                 GLOBAL_LOC += 1
                 return
             item = SymbolItem(_type = "Const", dataType = "int", name = var.val, domain = cur_domain, loc = '%x' + str(LOC))
@@ -410,6 +434,7 @@ def LDR(n, ignore = False, cur_domain = None, glob = False):
             return 
         elif n.name == 'VarAssign':
             var = n.children[0]
+            print(var.val)
             assert var.name == 'Ident'
             item = find_var_cross_domain(cur_domain, var.val)
             if item:
@@ -425,7 +450,23 @@ def LDR(n, ignore = False, cur_domain = None, glob = False):
             FILE_OUT.write('ret i32 ' + str(op[0]) + '\n')
             return 
         elif n.name == 'IfElse':
-            if_else_operator(n, cur_domain)
+            if_else_operator(n, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
+            return 
+        elif n.name == 'While':
+            while_operate(n, cur_domain)
+            return
+        elif n.name == 'Break':
+            assert loc_break is not None
+            FILE_OUT.write('br label %%x%d\n' % (loc_break))
+            return 
+        elif n.name == 'Cont':
+            assert loc_continue is not None
+            assert loc_break is not None
+            assert condition is not None
+            res = operate_exp(condition, cur_domain)
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
+            LOC += 1
+            FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc_continue, loc_break))
             return 
         elif n.name[-3:] == 'Exp':
             operate_exp(n, cur_domain)
@@ -439,7 +480,7 @@ def LDR(n, ignore = False, cur_domain = None, glob = False):
                     else:
                         print_node(child.val, ignore)
                 else:
-                    LDR(child, ignore, cur_domain, glob)
+                    LDR(child, ignore, cur_domain, glob, condition, loc_break, loc_continue)
             else:
                 print_node(child, ignore)
                 

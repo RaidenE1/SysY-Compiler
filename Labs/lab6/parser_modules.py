@@ -98,20 +98,31 @@ def p_Stmt(p):
     ''' Stmt : Semicolon
              | Block
              | Exp Semicolon 
+             | Continue Semicolon
+             | Break Semicolon
              | Return Exp Semicolon 
              | LVal Assign Exp Semicolon
              | If LPar Cond RPar Stmt 
+             | While LPar Cond RPar Stmt
              | If LPar Cond RPar Stmt Else Stmt '''
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 3:
-        p[0] = AstNode('NT', [p[1], p[2]], 'ExpSemi')
+        if p[1] == 'continue':
+            p[0] = AstNode('NT', [p[1], p[2]], 'Cont')
+        elif p[1] == 'break':
+            p[0] = AstNode('NT', [p[1], p[2]], 'Break')
+        else:
+            p[0] = AstNode('NT', [p[1], p[2]], 'ExpSemi')
     elif len(p) == 4:
         p[0] = AstNode('NT', [p[1], p[2], p[3]], 'return')
     elif len(p) == 5:
         p[0] = AstNode('NT', [p[1], p[2], p[3], p[4]], 'VarAssign')
     elif len(p) == 6:
-        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5]], 'IfElse')
+        if p[1] == 'if':
+            p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5]], 'IfElse')
+        else:
+            p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5]], 'While')
     else:
         p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5], p[6], p[7]], 'IfElse')
 
@@ -229,10 +240,10 @@ def p_Number(p):
     p[0] = AstNode('T', None, 'Number', p[1])
 
 def p_error(p):
-    # sys.exit(1)
-    print("Error de sintaxis", p)
-    print(p.value)
-    print("Error en linea: "+ str(p.lineno))
+    sys.exit(1)
+    # print("Error de sintaxis", p)
+    # print(p.value)
+    # print("Error en linea: "+ str(p.lineno))
 
 def run_parser(text, lexer):
     parser = yacc.yacc(start = 'CompUnit')
