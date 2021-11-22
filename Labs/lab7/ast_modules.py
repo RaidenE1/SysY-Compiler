@@ -11,13 +11,15 @@ class AstNode: # 抽象语法树节点
             self.children = []
 
 class SymbolItem: # 符号表
-    def __init__(self, _type, dataType, name, domain, loc, val = None):
+    def __init__(self, _type, dataType, name, domain, loc, val = None, dims = 0, dimL = []):
         self._type = _type # ID类型，变量，数组，函数
         self.dataType = dataType
         self.name = name # ID名字
         self.domain = domain
         self.loc = loc
         self.val = val
+        self.dim = dims
+        self.dimL = dimL
         # self.arrayLen = arrayLen # 数组长度
         # self.args = args # 函数参数列表
         # self.returnType = returnType # 函数返回值类型
@@ -32,3 +34,8 @@ class Domain: # 作用域
             self.children = children
         self.father = father
         self.item_tab = []
+
+class Array:
+    def __init__(self, pos, val):
+        self.pos = pos
+        self.val = val

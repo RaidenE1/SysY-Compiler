@@ -17,6 +17,13 @@ def lexer_init(text):
     lexer.input(text)
     return lexer
 
+def get_mul(l):
+    res = 1
+    for i in l:
+        assert isinstance(i, int)
+        res *= i
+    return res
+
 def find_var_in_domain(domain, name):
     if not domain:
         return None
@@ -37,9 +44,10 @@ def find_var_cross_domain(domain, name):
 def check_val(n, domain):
     if isinstance(n, AstNode):
         if n.type == 'T':
-            if n.name == 'Ident':
+            if n.name == 'Ident' or n.name == 'ArrVal':
                 item = find_var_cross_domain(domain, n.val)
                 if (not item) or item._type == 'Var':
+                    print('var int const')
                     sys.exit(1)
         else:
             for child in n.children:
@@ -58,11 +66,28 @@ def operate_exp(n, cur_domain, glob = False):
             elif var.name == 'Ident':
                 item = find_var_cross_domain(cur_domain, var.val)
                 if not item:
+                    print('item not defined')
                     sys.exit(1)
                 if glob:
                     return item.val, False
                 LOC += 1
                 FILE_OUT.write('%%x%d = load i32, i32* %s\n' % (LOC - 1, item.loc))
+                return '%x' + str(LOC - 1), False
+            elif var.name == 'ArrVal':
+                _brackets = get_brackets(var.children[1])
+                brackets = [operate_exp(x, cur_domain, glob = False)[0] for x in _brackets]
+                item = find_var_cross_domain(cur_domain, var.val)
+                if not item:
+                    print('item not defined')
+                    sys.exit(1)
+                FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
+                LOC += 1
+                FILE_OUT.write(', i32 0')
+                for idxx, val in enumerate(brackets):
+                    FILE_OUT.write(', i32 %s' % (val))
+                FILE_OUT.write('\n')
+                FILE_OUT.write("%%x%d = load i32, i32* %%x%d\n" % (LOC, LOC - 1))
+                LOC += 1
                 return '%x' + str(LOC - 1), False
             else:
                 print("not int not str")
@@ -347,6 +372,121 @@ def print_node(child, ignore):
     else:
         FILE_OUT.write(child + ' ')
 
+def get_brackets(n):
+    if len(n.children) == 3:
+        return [n.children[1]]
+    else:
+        return [n.children[1]] + get_brackets(n.children[3])
+
+def get_arr_name(brackets, pos):
+    if pos == len(brackets):
+        return ['i32']
+    else:
+        head = ['['+str(brackets[pos]), 'x'] 
+        bottle = get_arr_name(brackets, pos+1)
+        bottle[-1] += ']'
+        return head + bottle
+
+def get_add_init_val(n, p, pos, cur_domain, glob):
+    res = get_init_val(n.children[1], 0, pos + [p], cur_domain, glob)
+    if len(n.children) == 3:
+        res += get_add_init_val(n.children[2], p + 1, pos, cur_domain, glob)
+    return res
+
+def get_init_val(n, p, pos, cur_domain, glob = False):
+    if n.name[-3:] == "Exp":
+        val = operate_exp(n, cur_domain, glob)[0]
+        arr_node = Array(pos, val)
+        return [arr_node]
+    elif len(n.children) == 3:
+        return get_init_val(n.children[1], 0, pos + [p], cur_domain, glob)
+    elif len(n.children) == 4:
+        return get_init_val(n.children[1], 0, pos + [p], cur_domain, glob) + get_add_init_val(n.children[2], 1, pos, cur_domain, glob)
+
+def arr_decl(n, cur_domain, glob = False):
+    global LOC
+    global FILE_OUT
+    global GLOBAL_LOC
+    _name = n.children[0]
+    _brackets = get_brackets(n.children[1])
+    brackets = [operate_exp(x, cur_domain, glob = True)[0] for x in _brackets]
+    for res in brackets:
+        if not isinstance(res, int):
+            print('not init val in arr len')
+            sys.exit(0)
+    arr_name = ' '.join(get_arr_name(brackets, 0))
+    dim = len(brackets)
+    item = find_var_in_domain(cur_domain, _name)
+    if item:
+        sys.exit(0)
+    if n.name == 'ConstArr':
+        val_list = get_init_val(n.children[3], 0, [], cur_domain, glob)
+        item = SymbolItem('Const', 'Arr', _name, cur_domain, '%x'+str(LOC), arr_name, dim, brackets)
+        check_val(n.children[3], cur_domain)
+        cur_domain.item_tab.append(item)
+        LOC += 1
+        FILE_OUT.write('%s = alloca %s\n' % (item.loc, item.val))
+        FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
+        LOC += 1
+        for i in range(len(brackets) + 1):
+            FILE_OUT.write(', i32 0')
+        FILE_OUT.write('\n')
+        FILE_OUT.write('call void @memset(i32* %%x%d,i32 %d,i32 %d)\n' % (LOC - 1, 0, 4*get_mul(brackets)))
+        for idx, arr_node in enumerate(val_list):
+            if len(arr_node.pos) != len(brackets):
+                print('pos not match')
+                sys.exit(1)
+            FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
+            LOC += 1
+            FILE_OUT.write(', i32 0')
+            for idxx, pos in enumerate(arr_node.pos):
+                if pos >= brackets[idxx]:
+                    print('pos out of bound')
+                    sys.exit(1)
+                else:
+                    FILE_OUT.write(', i32 %d' % (pos))
+            FILE_OUT.write('\n')
+            FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(arr_node.val, LOC - 1))
+    else:
+        if glob:
+            if len(n.children) == 2:
+                item_glob = SymbolItem('Var', 'Arr', _name, cur_domain, '@g'+str(GLOBAL_LOC), arr_name, dim, brackets)
+                FILE_OUT.write('%s = dso_local global %s zeroinitializer\n' % (item_glob.loc, item_glob.val))
+                cur_domain.item_tab.append(item_glob)
+                GLOBAL_LOC += 1
+                return 
+        item = SymbolItem('Var', 'Arr', _name, cur_domain, '%x'+str(LOC), arr_name, dim, brackets)
+        cur_domain.item_tab.append(item)
+        LOC += 1
+        FILE_OUT.write('%s = alloca %s\n' % (item.loc, item.val))
+        FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
+        LOC += 1
+        for i in range(len(brackets) + 1):
+            FILE_OUT.write(', i32 0')
+        FILE_OUT.write('\n')
+        FILE_OUT.write('call void @memset(i32* %%x%d,i32 %d,i32 %d)\n' % (LOC - 1, 0, 4*get_mul(brackets)))
+        if len(n.children) == 4:
+            val_list = get_init_val(n.children[3], 0, [], cur_domain, glob)
+            if val_list == None:
+                return
+            for idx, arr_node in enumerate(val_list):
+                if arr_node == None:
+                    continue
+                if len(arr_node.pos) != len(brackets):
+                    print('pos not match')
+                    sys.exit(1)
+                FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
+                LOC += 1
+                FILE_OUT.write(', i32 0')
+                for idxx, pos in enumerate(arr_node.pos):
+                    if pos >= brackets[idxx]:
+                        print('pos out of bound')
+                        sys.exit(1)
+                    else:
+                        FILE_OUT.write(', i32 %d' % (pos))
+                FILE_OUT.write('\n')
+                FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(arr_node.val, LOC - 1))
+                    
 def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, loc_break = None, loc_continue = None):
     if n != None and n.type != 'T':
         global FILE_OUT
@@ -378,6 +518,9 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
         elif n.name == 'ConstDecl':
             LDR(n.children[2], ignore, cur_domain, glob)
             return 
+        elif n.name == 'VarArr' or n.name == 'ConstArr':
+            arr_decl(n, cur_domain, glob)
+            return
         elif n.name == 'VarDef':
             var = n.children[0]
             # print(var.val)
@@ -430,20 +573,33 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
             FILE_OUT.write('%s = alloca i32\n' % (item.loc))
             check_val(n.children[2], cur_domain)
             res = operate_exp(n.children[2], cur_domain)[0]
+            item.val = res
             FILE_OUT.write('store i32 %s, i32* %s\n' %(str(res), item.loc))
             return 
         elif n.name == 'VarAssign':
             var = n.children[0]
-            print(var.val)
-            assert var.name == 'Ident'
             item = find_var_cross_domain(cur_domain, var.val)
             if item:
                 if item._type == 'Const':
+                    print('const assign')
                     sys.exit(1)
                 else:
-                    res = operate_exp(n.children[2], cur_domain)[0]
-                    FILE_OUT.write('store i32 %s, i32* %s\n' %(str(res), item.loc))
+                    if item.dataType == 'Arr':
+                        _brackets = get_brackets(var.children[1])
+                        res = operate_exp(n.children[2], cur_domain, glob)
+                        brackets = [operate_exp(x, cur_domain, glob)[0] for x in _brackets]
+                        FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
+                        LOC += 1
+                        FILE_OUT.write(', i32 0')
+                        for idx, pos in enumerate(brackets):
+                            FILE_OUT.write(', i32 %s' % (pos))
+                        FILE_OUT.write('\n')
+                        FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(res[0], LOC - 1))
+                    else:
+                        res = operate_exp(n.children[2], cur_domain)[0]
+                        FILE_OUT.write('store i32 %s, i32* %s\n' %(str(res), item.loc))
                     return
+            print('item not find')
             sys.exit(1)
         elif n.name == 'return':
             op = operate_exp(n.children[1], cur_domain)
@@ -495,7 +651,7 @@ def main(args):
     assert FILE_OUT is not None
 
     text = FILE_IN.read()
-    FILE_OUT.write("declare i32 @getch()\ndeclare void @putch(i32)\ndeclare i32 @getint()\ndeclare void @putint(i32)\n")
+    FILE_OUT.write("declare i32 @getch()\ndeclare void @putch(i32)\ndeclare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @memset(i32*, i32, i32)\n")
     lexer = lexer_init(text)
     print(text)
     # tok = lexer.token()

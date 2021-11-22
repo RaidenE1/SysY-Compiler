@@ -31,7 +31,9 @@ reserved = {
     '||' : 'OR',
     '&&' : 'AND',
     '!=' : 'NotEq',
-    '!' : 'NG'
+    '!' : 'NG',
+    '[' : 'LBracket',
+    ']' : 'RBracket'
 }
 
 tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'RESERVED', 'IDENT', 'SysFunc'] + list(reserved.values())
@@ -45,7 +47,7 @@ def t_SysFunc(t):
     return t
 
 def t_RESERVED(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*|\{|\}|\(|\)|\+|\*|;|-|/|%|==|,|\|\||&&|=|!=|<=|>=|<|>|!'
+    r'[a-zA-Z_][a-zA-Z_0-9]*|\{|\}|\(|\)|\+|\*|;|-|/|%|==|,|\|\||&&|=|!=|<=|>=|<|>|!|\[|\]'
     if t.value in reserved.keys():
         t.type = reserved.get(t.value)# Check for reserved words
         return t

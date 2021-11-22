@@ -48,7 +48,7 @@ def p_Decl(p):
 
 def p_ConstDecl(p):
     ''' ConstDecl : Const BType AddConstDef Semicolon '''
-    p[0] = AstNode('ConstDecl', [p[1], p[2], p[3], p[4]], 'ConstDecl')
+    p[0] = AstNode('NT', [p[1], p[2], p[3], p[4]], 'ConstDecl')
 
 def p_AddConstDef(p):
     ''' AddConstDef : ConstDef Comma AddConstDef
@@ -59,16 +59,40 @@ def p_AddConstDef(p):
         p[0] = p[1]
 
 def p_ConstDef(p):
-    ''' ConstDef : IDENT Assign ConstInitVal '''
-    p[0] = AstNode('NT', [AstNode('T', None, 'Ident', p[1], True), p[2], p[3]], 'ConstDef')
+    ''' ConstDef : IDENT Assign ConstInitVal 
+                 | IDENT AddBracket Assign ConstInitVal'''
+    if len(p) == 4:
+        p[0] = AstNode('NT', [AstNode('T', None, 'Ident', p[1], True), p[2], p[3]], 'ConstDef')
+    else:
+        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4]], 'ConstArr')
+
+def p_AddBracket(p):
+    ''' AddBracket : LBracket AddExp RBracket AddBracket
+                   | LBracket AddExp RBracket '''
+    p[0] = AstNode('NT', p[1:], 'AddBracket')
 
 def p_BType(p):
     ''' BType : Int'''
     p[0] = AstNode('T', None, 'BType', p[1])
 
 def p_ConstInitVal(p):
-    ''' ConstInitVal : AddExp '''
-    p[0] = p[1]
+    ''' ConstInitVal : AddExp 
+                     | LBrace RBrace 
+                     | LBrace ConstInitVal RBrace 
+                     | LBrace ConstInitVal AddConstInitVal RBrace '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = AstNode('NT', p[1:], 'ArrDecl')
+
+def p_AddConstInitval(p):
+    ''' AddConstInitVal : Comma ConstInitVal AddConstInitVal 
+                        | Comma ConstInitVal '''
+    if len(p) == 3:
+        p[0] = AstNode('NT', [p[1], p[2]], 'AddConstInitVal')
+    else:
+        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'AddConstInitVal')
+            
     
 def p_VarDecl(p):
     ''' VarDecl : BType AddVarDef Semicolon '''
@@ -83,16 +107,33 @@ def p_AddVarDef(p):
         p[0] = p[1]
 
 def p_VarDef(p):
-    ''' VarDef  : IDENT
-                | IDENT Assign InitVal '''
+    ''' VarDef  : IDENT AddBracket Assign InitVal
+                | IDENT AddBracket
+                | IDENT Assign InitVal 
+                | IDENT '''
     if len(p) == 2:
         p[0] = AstNode('NT', [AstNode('T', None, 'Ident', p[1], False)], 'VarDef')
-    else:
+    elif len(p) == 3:
+        p[0] = AstNode('NT', [p[1], p[2]], 'VarArr')
+    elif len(p) == 4:
         p[0] = AstNode('NT', [AstNode('T', None, 'Ident', p[1], False), p[2], p[3]], 'VarDef')
+    else:
+        p[0] = AstNode('NT', [p[1], p[2], p[3], p[4]], 'VarArr')
 
 def p_InitVal(p):
-    ''' InitVal : Exp '''
-    p[0] = p[1]
+    ''' InitVal : Exp 
+                | LBrace RBrace
+                | LBrace InitVal RBrace
+                | LBrace InitVal AddInitVal RBrace '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = AstNode('NT', p[1:], 'InitVal')
+
+def p_AddInitVal(p):
+    ''' AddInitVal : Comma InitVal AddInitVal
+                   | Comma InitVal '''
+    p[0] = AstNode('NT', p[1:], 'AddInitVal')
 
 def p_Stmt(p):
     ''' Stmt : Semicolon
@@ -167,9 +208,18 @@ def p_RelExp(p):
         p[0] = AstNode('NT', [p[1], p[2], p[3]], 'RelExp')
     
 def p_LVal(p):
-    ''' LVal : IDENT '''
-    p[0] = AstNode('T', None, 'Ident', p[1], False)
-     
+    ''' LVal : IDENT 
+             | IDENT AddLVal '''
+    if len(p) == 2:
+        p[0] = AstNode('T', None, 'Ident', p[1], False)
+    else:
+        p[0] = AstNode('T', [p[1], p[2]], 'ArrVal', p[1])
+
+def p_AddLVal(p):
+    ''' AddLVal : LBracket Exp RBracket AddLVal 
+                | LBracket Exp RBracket '''
+    p[0] = AstNode('NT', p[1:], 'AddLVal')
+        
 def p_Exp(p):
     ''' Exp : AddExp '''
     p[0] = p[1]
@@ -228,10 +278,7 @@ def p_PrimaryExp(p):
     ''' PrimaryExp : LPar Exp RPar 
                    | Number 
                    | LVal '''
-    if len(p) == 2:
-        p[0] = AstNode('NT', [p[1]], 'PriExp')
-    else:
-        p[0] = AstNode('NT', [p[1], p[2], p[3]], 'PriExp')
+    p[0] = AstNode('NT', p[1:], 'PriExp')
 
 def p_Number(p):
     ''' Number  : DECIMAL 
@@ -240,10 +287,9 @@ def p_Number(p):
     p[0] = AstNode('T', None, 'Number', p[1])
 
 def p_error(p):
+    print("Error de sintaxis", p)
+    print("Error en linea: "+ str(p.lineno))
     sys.exit(1)
-    # print("Error de sintaxis", p)
-    # print(p.value)
-    # print("Error en linea: "+ str(p.lineno))
 
 def run_parser(text, lexer):
     parser = yacc.yacc(start = 'CompUnit')
