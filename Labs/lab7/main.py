@@ -289,7 +289,11 @@ def operate_exp(n, cur_domain, glob = False):
         if len(n.children) == 3:
             op1 = operate_exp(n.children[0], cur_domain)[0]
             op2 = operate_exp(n.children[2], cur_domain)[0]
-            FILE_OUT.write('%%x%d = or i32 %s, %s\n' % (LOC, op1, op2))
+            LOC += 3
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC - 3, op1))
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC - 2, op2))
+            FILE_OUT.write('%%x%d = or i1 %s, %s\n' % (LOC - 1, LOC - 3, LOC - 2))
+            FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
             LOC += 1
             return '%x' + str(LOC - 1), False
         else:
