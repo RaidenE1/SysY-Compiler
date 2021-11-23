@@ -1,3 +1,4 @@
+from re import A
 import sys
 from ply import lex
 import tokrules
@@ -80,14 +81,33 @@ def operate_exp(n, cur_domain, glob = False):
                 if not item:
                     print('item not defined')
                     sys.exit(1)
+                LOC += 2
+                res_pos_ptr = LOC - 2
+                res_pos = LOC - 1
+                FILE_OUT.write('%%x%d = alloca i32\nstore i32 0, i32* %%x%d\n%%x%d = load i32, i32* %%x%d\n' %(res_pos_ptr, res_pos_ptr, res_pos, res_pos_ptr))
+                changed = False
+                for idxx in range(len(brackets) - 1):
+                    val = brackets[idxx]
+                    if val != 0:
+                        LOC += 2
+                        FILE_OUT.write('%%x%d = mul i32 %s, %s\n' % (LOC - 2, val, item.dimL[idxx + 1]))
+                        FILE_OUT.write('%%x%d = add i32 %%x%d, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
+                        res_pos = LOC - 1
+                        changed = True
+                if brackets[-1] != 0:
+                    LOC += 1
+                    FILE_OUT.write('%%x%d = add i32 %%x%d, %s\n' % (LOC - 1, res_pos, brackets[-1]))
+                    res_pos = LOC - 1
+                    changed = True
+                if changed:
+                    FILE_OUT.write("store i32 %%x%d, i32* %%x%d\n" % (res_pos, res_pos_ptr))
                 FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
                 LOC += 1
-                FILE_OUT.write(', i32 0')
-                for idxx, val in enumerate(brackets):
-                    FILE_OUT.write(', i32 %s' % (val))
-                FILE_OUT.write('\n')
-                FILE_OUT.write("%%x%d = load i32, i32* %%x%d\n" % (LOC, LOC - 1))
+                if len(brackets) == len(item.dimL):
+                    FILE_OUT.write(', i32 0')
+                FILE_OUT.write(', i32 %%x%d\n' % (res_pos))
                 LOC += 1
+                FILE_OUT.write('%%x%d = load i32, i32* %%x%d\n' % (LOC - 1, LOC - 2))
                 return '%x' + str(LOC - 1), False
             else:
                 print("not int not str")
@@ -253,9 +273,13 @@ def operate_exp(n, cur_domain, glob = False):
             exit(1)
     elif n.name == 'LAndExp':
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0], cur_domain)[0]
-            op2 = operate_exp(n.children[2], cur_domain)[0]
-            FILE_OUT.write('%%x%d = and i32 %s, %s\n' % (LOC, op1, op2))
+            op1 = operate_exp(n.children[0], cur_domain, glob)[0]
+            op2 = operate_exp(n.children[2], cur_domain, glob)[0]
+            LOC += 3
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC - 3, op1))
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC - 2, op2))
+            FILE_OUT.write('%%x%d = and i1 %%x%d, %%x%d\n' % (LOC - 1, LOC - 3, LOC - 2))
+            FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
             LOC += 1
             return '%x' + str(LOC - 1), False
         else:
@@ -402,50 +426,90 @@ def get_init_val(n, p, pos, cur_domain, glob = False):
         return get_init_val(n.children[1], 0, pos + [p], cur_domain, glob)
     elif len(n.children) == 4:
         return get_init_val(n.children[1], 0, pos + [p], cur_domain, glob) + get_add_init_val(n.children[2], 1, pos, cur_domain, glob)
+    else:
+        return None
+
+def get_pos(val_pos, arr_len):
+    res = 0
+    for i in range(len(val_pos) - 1):
+        res += val_pos[i] * arr_len[i + 1]
+    res += val_pos[-1]
+    return res
 
 def arr_decl(n, cur_domain, glob = False):
     global LOC
     global FILE_OUT
     global GLOBAL_LOC
     _name = n.children[0]
+    check_val(n.children[1], cur_domain)
     _brackets = get_brackets(n.children[1])
     brackets = [operate_exp(x, cur_domain, glob = True)[0] for x in _brackets]
     for res in brackets:
         if not isinstance(res, int):
             print('not init val in arr len')
             sys.exit(0)
-    arr_name = ' '.join(get_arr_name(brackets, 0))
+    arr_name = '[' + str(get_mul(brackets)) + ' x ' + 'i32]'
     dim = len(brackets)
     item = find_var_in_domain(cur_domain, _name)
     if item:
         sys.exit(0)
     if n.name == 'ConstArr':
         val_list = get_init_val(n.children[3], 0, [], cur_domain, glob)
-        item = SymbolItem('Const', 'Arr', _name, cur_domain, '%x'+str(LOC), arr_name, dim, brackets)
         check_val(n.children[3], cur_domain)
+        if glob:
+            item_glob = SymbolItem('Const', 'Arr', _name, cur_domain, '@g'+str(GLOBAL_LOC), arr_name, dim, brackets)
+            GLOBAL_LOC += 1
+            FILE_OUT.write('%s = dso_local constant %s ' % (item_glob.loc, item_glob.val))
+            val_list = get_init_val(n.children[3], 0, [], cur_domain, glob)
+            cur_domain.item_tab.append(item_glob)
+            if val_list == None:
+                FILE_OUT.write('zeroinitializer\n')
+            else:
+                val_ptr = 0
+                arr_ptr = 0
+                FILE_OUT.write('[')
+                arr_len = get_mul(item_glob.dimL)
+                while arr_ptr < arr_len or val_ptr < len(val_list):
+                    val_pos = 0
+                    if val_ptr < len(val_list):
+                        val_pos = get_pos(val_list[val_ptr].pos, item_glob.dimL)
+                    if arr_ptr == val_pos:
+                        FILE_OUT.write('i32 %s' % (val_list[val_ptr].val))
+                        val_ptr += 1
+                    else:
+                        FILE_OUT.write('i32 0')
+                    arr_ptr += 1
+                    if arr_ptr < arr_len:
+                        FILE_OUT.write(', ')
+                FILE_OUT.write(']\n')  
+            return 
+        item = SymbolItem('Const', 'Arr', _name, cur_domain, '%x'+str(LOC), arr_name, dim, brackets)
         cur_domain.item_tab.append(item)
         LOC += 1
         FILE_OUT.write('%s = alloca %s\n' % (item.loc, item.val))
         FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
         LOC += 1
-        for i in range(len(brackets) + 1):
-            FILE_OUT.write(', i32 0')
-        FILE_OUT.write('\n')
+        FILE_OUT.write(', i32 0, i32 0\n')
         FILE_OUT.write('call void @memset(i32* %%x%d,i32 %d,i32 %d)\n' % (LOC - 1, 0, 4*get_mul(brackets)))
         for idx, arr_node in enumerate(val_list):
-            if len(arr_node.pos) != len(brackets):
+            if arr_node == None:
+                continue
+            elif len(arr_node.pos) != len(brackets):
                 print('pos not match')
                 sys.exit(1)
             FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
             LOC += 1
             FILE_OUT.write(', i32 0')
-            for idxx, pos in enumerate(arr_node.pos):
-                if pos >= brackets[idxx]:
+            res_pos = 0
+            for idxx in range(len(enumerate(arr_node.pos)) - 1):
+                ele_pos = arr_node.pos[idxx]
+                if ele_pos >= brackets[idxx]:
                     print('pos out of bound')
                     sys.exit(1)
                 else:
-                    FILE_OUT.write(', i32 %d' % (pos))
-            FILE_OUT.write('\n')
+                    res_pos += ele_pos * brackets[idxx + 1]  
+            res_pos += arr_node.pos[-1]  
+            FILE_OUT.write(', i32 %d\n', res_pos)
             FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(arr_node.val, LOC - 1))
     else:
         if glob:
@@ -454,16 +518,40 @@ def arr_decl(n, cur_domain, glob = False):
                 FILE_OUT.write('%s = dso_local global %s zeroinitializer\n' % (item_glob.loc, item_glob.val))
                 cur_domain.item_tab.append(item_glob)
                 GLOBAL_LOC += 1
-                return 
+            else:
+                item_glob = SymbolItem('Var', 'Arr', _name, cur_domain, '@g'+str(GLOBAL_LOC), arr_name, dim, brackets)
+                GLOBAL_LOC += 1
+                FILE_OUT.write('%s = dso_local global %s ' % (item_glob.loc, item_glob.val))
+                val_list = get_init_val(n.children[3], 0, [], cur_domain, glob)
+                cur_domain.item_tab.append(item_glob)
+                if val_list == None:
+                    FILE_OUT.write('zeroinitializer\n')
+                else:
+                    val_ptr = 0
+                    arr_ptr = 0
+                    FILE_OUT.write('[')
+                    arr_len = get_mul(item_glob.dimL)
+                    while arr_ptr < arr_len or val_ptr < len(val_list):
+                        val_pos = 0
+                        if val_ptr < len(val_list):
+                            val_pos = get_pos(val_list[val_ptr].pos, item_glob.dimL)
+                        if arr_ptr == val_pos:
+                            FILE_OUT.write('i32 %s' % (val_list[val_ptr].val))
+                            val_ptr += 1
+                        else:
+                            FILE_OUT.write('i32 0')
+                        arr_ptr += 1
+                        if arr_ptr < arr_len:
+                            FILE_OUT.write(', ')
+                    FILE_OUT.write(']\n')  
+            return 
         item = SymbolItem('Var', 'Arr', _name, cur_domain, '%x'+str(LOC), arr_name, dim, brackets)
         cur_domain.item_tab.append(item)
         LOC += 1
         FILE_OUT.write('%s = alloca %s\n' % (item.loc, item.val))
         FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
         LOC += 1
-        for i in range(len(brackets) + 1):
-            FILE_OUT.write(', i32 0')
-        FILE_OUT.write('\n')
+        FILE_OUT.write(', i32 0, i32 0\n')
         FILE_OUT.write('call void @memset(i32* %%x%d,i32 %d,i32 %d)\n' % (LOC - 1, 0, 4*get_mul(brackets)))
         if len(n.children) == 4:
             val_list = get_init_val(n.children[3], 0, [], cur_domain, glob)
@@ -478,13 +566,16 @@ def arr_decl(n, cur_domain, glob = False):
                 FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
                 LOC += 1
                 FILE_OUT.write(', i32 0')
-                for idxx, pos in enumerate(arr_node.pos):
-                    if pos >= brackets[idxx]:
+                res_pos = 0
+                for idxx in range(len((arr_node.pos)) - 1):
+                    ele_pos = arr_node.pos[idxx]
+                    if ele_pos >= brackets[idxx]:
                         print('pos out of bound')
                         sys.exit(1)
                     else:
-                        FILE_OUT.write(', i32 %d' % (pos))
-                FILE_OUT.write('\n')
+                        res_pos += ele_pos * brackets[idxx + 1]  
+                res_pos += arr_node.pos[-1]  
+                FILE_OUT.write(', i32 %d\n' % (res_pos))
                 FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(arr_node.val, LOC - 1))
                     
 def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, loc_break = None, loc_continue = None):
@@ -588,13 +679,32 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
                         _brackets = get_brackets(var.children[1])
                         res = operate_exp(n.children[2], cur_domain, glob)
                         brackets = [operate_exp(x, cur_domain, glob)[0] for x in _brackets]
+                        LOC += 2
+                        res_pos_ptr = LOC - 2
+                        res_pos = LOC - 1
+                        FILE_OUT.write('%%x%d = alloca i32\nstore i32 0, i32* %%x%d\n%%x%d = load i32, i32* %%x%d\n' %(res_pos_ptr, res_pos_ptr, res_pos, res_pos_ptr))
+                        changed = False
+                        for idxx in range(len(brackets) - 1):
+                            val = brackets[idxx]
+                            if val != 0:
+                                LOC += 2
+                                FILE_OUT.write('%%x%d = mul i32 %s, %s\n' % (LOC - 2, val, item.dimL[idxx + 1]))
+                                FILE_OUT.write('%%x%d = add i32 %%x%d, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
+                                res_pos = LOC - 1
+                                changed = True
+                        if brackets[-1] != 0:
+                            LOC += 1
+                            FILE_OUT.write('%%x%d = add i32 %%x%d, %s\n' % (LOC - 1, res_pos, brackets[-1]))
+                            res_pos = LOC - 1
+                            changed = True
+                        if changed:
+                            FILE_OUT.write("store i32 %%x%d, i32* %%x%d\n" % (res_pos, res_pos_ptr))
                         FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
                         LOC += 1
-                        FILE_OUT.write(', i32 0')
-                        for idx, pos in enumerate(brackets):
-                            FILE_OUT.write(', i32 %s' % (pos))
-                        FILE_OUT.write('\n')
-                        FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(res[0], LOC - 1))
+                        if len(brackets) == len(item.dimL):
+                            FILE_OUT.write(', i32 0')
+                        FILE_OUT.write(', i32 %%x%d\n' % (res_pos))
+                        FILE_OUT.write('store i32 %s, i32* %%x%d\n' % (res[0], LOC - 1))
                     else:
                         res = operate_exp(n.children[2], cur_domain)[0]
                         FILE_OUT.write('store i32 %s, i32* %s\n' %(str(res), item.loc))
