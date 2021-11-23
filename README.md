@@ -54,9 +54,12 @@ lli out.ll // 解释out.ll
 - [lab4](./Labs/lab4/) Accepted on Nov 9,2021
 - [lab5](./Labs/lab5/) Accepted on Nov 18,2021
 - [lab6](./Labs/lab6/) Accepted on Nov 19,2021
-- [lab7](./Labs/lab7/) yet to come ......
-
+- [lab7](./Labs/lab7/) Accepted on Nov 23,2021
+- [lab8](./Labs/lab8/) yet to be accepted ......
+- [challenge : Multi-Dimensional array](./Labs/challenge/MDA/) yet to be accepted ......
+- [challenge : Short-circuit evaluation](./Labs/challenge/SCE/) yet to be accepted ......
 
 ## 参考文档
 
 PLY的说明文档参见[此处](http://www.dabeaz.com/ply/ply.html)
+LLVM IR 参考:[LLVM Lang Ref](https://llvm.org/docs/LangRef.html) & [LLVM Programmer Manual](https://llvm.org/docs/ProgrammersManual.html)
