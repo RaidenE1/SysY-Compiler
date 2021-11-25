@@ -1,3 +1,4 @@
+
 class AstNode: # 抽象语法树节点
     def __init__(self, type = 'T', children = None, name = None, val = None, const = True, loc = 0):
         self.type = type
@@ -11,7 +12,7 @@ class AstNode: # 抽象语法树节点
             self.children = []
 
 class SymbolItem: # 符号表
-    def __init__(self, _type, dataType, name, domain, loc, val = None, dims = 0, dimL = []):
+    def __init__(self, _type, dataType, name, domain, loc, val = None, dims = 0, dimL = [], typel = [], params = []):
         self._type = _type # ID类型，变量，数组，函数
         self.dataType = dataType
         self.name = name # ID名字
@@ -20,6 +21,8 @@ class SymbolItem: # 符号表
         self.val = val
         self.dim = dims
         self.dimL = dimL
+        self.typel = typel
+        self.params = params
         # self.arrayLen = arrayLen # 数组长度
         # self.args = args # 函数参数列表
         # self.returnType = returnType # 函数返回值类型

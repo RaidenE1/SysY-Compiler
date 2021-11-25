@@ -13,6 +13,8 @@ LOC = 1
 GLOBAL_LOC = 1
 DOMAIN_LOC = 1
 
+RET = False
+
 def lexer_init(text):
     lexer = lex.lex(module = tokrules)
     lexer.input(text)
@@ -54,6 +56,24 @@ def check_val(n, domain):
             for child in n.children:
                 check_val(child, domain)
 
+def get_mindim(n, cur_domain):
+    if isinstance(n, int) or isinstance(n, str):
+        return [0]
+    elif n.name == 'Ident':
+        item = find_var_cross_domain(cur_domain, n.val)
+        if item.dataType == 'Arr':
+            return [item.dim]
+        return [0]
+    elif n.name == 'ArrVal':
+        item = find_var_cross_domain(cur_domain, n.val)
+        print(n.children[1], len(get_brackets(n.children[1])))
+        return [item.dim - len(get_brackets(n.children[1]))]
+    else:
+        res = []
+        for child in n.children:
+            res += get_mindim(child, cur_domain)
+        return res
+
 def operate_exp(n, cur_domain, glob = False):
     global VALUE_MAP
     global FILE_OUT
@@ -64,17 +84,25 @@ def operate_exp(n, cur_domain, glob = False):
             var = n.children[0]
             if var.name == 'Number':
                 return var.val, False
-            elif var.name == 'Ident':
-                item = find_var_cross_domain(cur_domain, var.val)
-                if not item:
-                    print('item not defined')
-                    sys.exit(1)
+            item = find_var_cross_domain(cur_domain, var.val)
+            if not item:
+                print('item not defined')
+                sys.exit(1)
+            elif item.dataType == 'int':
                 if glob:
                     return item.val, False
                 LOC += 1
                 FILE_OUT.write('%%x%d = load i32, i32* %s\n' % (LOC - 1, item.loc))
                 return '%x' + str(LOC - 1), False
-            elif var.name == 'ArrVal':
+            elif item.dataType == 'Arr':
+                if len(var.children) == 0:
+                    FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
+                    LOC += 1
+                    FILE_OUT.write(', i32 0')
+                    if item.val != 'i32':
+                        FILE_OUT.write(', i32 0')
+                    FILE_OUT.write('\n')
+                    return '%x' + str(LOC - 1), False
                 _brackets = get_brackets(var.children[1])
                 brackets = [operate_exp(x, cur_domain, glob = False)[0] for x in _brackets]
                 item = find_var_cross_domain(cur_domain, var.val)
@@ -90,7 +118,7 @@ def operate_exp(n, cur_domain, glob = False):
                     val = brackets[idxx]
                     if val != 0:
                         LOC += 2
-                        FILE_OUT.write('%%x%d = mul i32 %s, %s\n' % (LOC - 2, val, item.dimL[idxx + 1]))
+                        FILE_OUT.write('%%x%d = mul i32 %s, %s \n' % (LOC - 2, val, item.dimL[idxx + 1]))
                         FILE_OUT.write('%%x%d = add i32 %%x%d, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
                         res_pos = LOC - 1
                         changed = True
@@ -103,12 +131,13 @@ def operate_exp(n, cur_domain, glob = False):
                     FILE_OUT.write("store i32 %%x%d, i32* %%x%d\n" % (res_pos, res_pos_ptr))
                 FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
                 LOC += 1
-                if len(brackets) == len(item.dimL):
+                if item.val != 'i32':
                     FILE_OUT.write(', i32 0')
                 FILE_OUT.write(', i32 %%x%d\n' % (res_pos))
                 LOC += 1
                 FILE_OUT.write('%%x%d = load i32, i32* %%x%d\n' % (LOC - 1, LOC - 2))
                 return '%x' + str(LOC - 1), False
+
             else:
                 print("not int not str")
         else: 
@@ -156,30 +185,70 @@ def operate_exp(n, cur_domain, glob = False):
         else:
             print("UnaryExp Error")
     elif n.name == 'SysFuncExp':
+        SYS_FUNC = ['getint', 'getch', 'putint', 'putch', 'getarray', 'putarray']
+        func_name = n.children[0]
+        item = find_var_cross_domain(cur_domain, func_name)
+        if func_name not in SYS_FUNC and not item:
+            print('func not defined')
+            sys.exit(1)
         if len(n.children) == 4:
-            param = operate_exp(n.children[2], cur_domain, glob)
-            if n.children[0] == 'putint':
-                FILE_OUT.write("call void @putint(i32 %s)\n" %(param[0]))
+            params = get_params(n.children[2])
+            params_res = [operate_exp(x, cur_domain, glob)[0] for x in params]
+            if item:
+                fType = item._type
+                f_param = item.params
+                print(item.name, f_param)
+                if fType != 'void':
+                    FILE_OUT.write('%%x%d = ' % (LOC))
+                    LOC += 1
+                if fType == 'int':
+                    fType = 'i32'
+                FILE_OUT.write("call %s @%s(" %(fType, item.name))
+                for idx, p in enumerate(item.typel):
+                    if idx > 0:
+                        FILE_OUT.write(', ')
+                    FILE_OUT.write('%s %s' % (p, params_res[idx]))
+                    if get_mindim(params[idx], cur_domain) and f_param[idx].dim:
+                        temp_dim = min(get_mindim(params[idx], cur_domain))
+                        print(temp_dim, f_param[idx].dim, idx)
+                        assert temp_dim == f_param[idx].dim
+                FILE_OUT.write(')\n')
+                if fType != 'void':
+                    return '%x' + str(LOC - 1), False
+            elif n.children[0] == 'putint':
+                FILE_OUT.write("call void @putint(i32 %s)\n" %(params_res[0]))
             elif n.children[0] == 'putch':
-                FILE_OUT.write("call void @putch(i32 %s)\n" %(param[0]))
+                FILE_OUT.write("call void @putch(i32 %s)\n" %(params_res[0]))
+            elif n.children[0] == 'putarray':
+                FILE_OUT.write("call void @putarray(i32 %s, i32* %s)\n" %(params_res[0], params_res[1]))
+            elif n.children[0] == 'getarray':
+                FILE_OUT.write("%%x%d = call i32 @getarray(i32* %s)\n" %(LOC, params_res[0]))
+                LOC += 1
+                return '%x' + str(LOC - 1), False
             else:
                 print('SysFuncOP Error')
-                exit(0)
+                sys.exit(0)
         elif len(n.children) == 3:
-            if n.children[0] == 'getint':
-                FILE_OUT.write("%%x%d = call i32 @getint()\n" % (LOC))
-                LOC += 1
-                return '%x' + str(LOC - 1), False
-            elif n.children[0] == 'getch':
-                FILE_OUT.write("%%x%d = call i32 @getch()\n" %(LOC))
-                LOC += 1
-                return '%x' + str(LOC - 1), False
+            if item:
+                fType = item._type
+                if fType != 'void':
+                    FILE_OUT.write('%%x%d = ' % (LOC))
+                    LOC += 1
+                if fType == 'int':
+                    fType = 'i32'
+                FILE_OUT.write("call %s @%s()\n" %(fType, item.name))
+                if fType != 'void':
+                    return '%x' + str(LOC - 1), False
             else:
-                print('SysFuncOP Error 3')
-                exit(0)
+                if n.children[0] == 'getint':
+                    FILE_OUT.write("%%x%d = call i32 @getint()\n" % (LOC))
+                    LOC += 1
+                elif n.children[0] == 'getch':
+                    FILE_OUT.write("%%x%d = call i32 @getch()\n" %(LOC))
+                    LOC += 1
+                return '%x' + str(LOC - 1), False
         else:
-            print('SysFunc Error')
-            exit(0)
+            sys.exit(0)
     elif n.name == 'MulExp':
         if len(n.children) == 3:
             op1 = operate_exp(n.children[0], cur_domain, glob)
@@ -292,7 +361,7 @@ def operate_exp(n, cur_domain, glob = False):
             LOC += 3
             FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC - 3, op1))
             FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC - 2, op2))
-            FILE_OUT.write('%%x%d = or i1 %s, %s\n' % (LOC - 1, LOC - 3, LOC - 2))
+            FILE_OUT.write('%%x%d = or i1 %%x%d, %%x%d\n' % (LOC - 1, LOC - 3, LOC - 2))
             FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
             LOC += 1
             return '%x' + str(LOC - 1), False
@@ -440,11 +509,24 @@ def get_pos(val_pos, arr_len):
     res += val_pos[-1]
     return res
 
+def get_add_params(n):
+    if len(n.children) == 2:
+        return [n.children[1]]
+    else:
+        return [n.children[1]] + get_add_params(n.children[2])
+
+def get_params(n):
+    if len(n.children) == 1:
+        return [n.children[0]]
+    else:
+        return [n.children[0]] + get_add_params(n.children[1])
+
 def arr_decl(n, cur_domain, glob = False):
     global LOC
     global FILE_OUT
     global GLOBAL_LOC
     _name = n.children[0]
+    # print(_name)
     check_val(n.children[1], cur_domain)
     _brackets = get_brackets(n.children[1])
     brackets = [operate_exp(x, cur_domain, glob = True)[0] for x in _brackets]
@@ -581,13 +663,32 @@ def arr_decl(n, cur_domain, glob = False):
                 res_pos += arr_node.pos[-1]  
                 FILE_OUT.write(', i32 %d\n' % (res_pos))
                 FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(arr_node.val, LOC - 1))
+
+def func_param_decl(items):
+    global LOC 
+    res = []
+    for idx, item in enumerate(items):
+        if item.dataType == 'int':
+            FILE_OUT.write('%%x%d = alloca i32\n' % (LOC))
+            LOC += 1
+            FILE_OUT.write('store i32 %s, i32* %%x%d\n' % (item.loc, LOC - 1))
+            item.loc = '%x' + str(LOC - 1)
+        res.append(item)
+    return res
+
+def count_brackets(n):
+    if len(n.children) == 4:
+        return [AstNode('NT', [AstNode('T', None, 'Number', 1)], 'PriExp')]
+    else:
+        return [AstNode('NT', [AstNode('T', None, 'Number', 1)], 'PriExp')] + get_brackets(n.children[4])
                     
-def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, loc_break = None, loc_continue = None):
+def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, loc_break = None, loc_continue = None, items = None, func_block = False, func_type = None):
     if n != None and n.type != 'T':
         global FILE_OUT
         global DOMAIN_LOC
         global LOC
         global GLOBAL_LOC
+        global RET
         # print(n.name, condition, loc_break, loc_continue)
         if n.name == "MulDef":
             LDR(n.children[0], ignore, cur_domain, True)
@@ -595,15 +696,71 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
             return
         elif n.name == 'FuncDef':
             FILE_OUT.write('define dso_local ')
+            func_name = n.children[1]
+            item = SymbolItem(n.children[0], 'Func', func_name, cur_domain, 0)
+            cur_domain.item_tab.append(item)
+            if n.children[0] == 'int':
+                FILE_OUT.write('i32 ')
+            elif n.children[0] == 'void':
+                FILE_OUT.write('void ')
+            else:
+                print('no type found')
+                sys.exit(1)
+            FILE_OUT.write('@' + n.children[1] + '(')
+            if len(n.children) == 5:
+                FILE_OUT.write(')\n')
+                ft = n.children[0]
+                if ft == 'int':
+                    ft = 'i32'
+                LDR(n.children[4], ignore, cur_domain, func_block = True, func_type = ft)
+            else:
+                params = get_params(n.children[3])
+                pType = []
+                items = []
+                for idx, p in enumerate(params):
+                    if idx > 0:
+                        FILE_OUT.write(', ')
+                    if len(p.children) == 2:
+                        FILE_OUT.write('i32 %%x%d' % (LOC))
+                        LOC += 1
+                        pType.append('i32')
+                        items.append(SymbolItem('Var', 'int', p.children[1], None, '%x' + str(LOC - 1)))
+                    else:
+                        FILE_OUT.write('i32* %%x%d' % (LOC))
+                        LOC += 1
+                        pType.append('i32*')
+                        _brackets = count_brackets(p)
+                        brackets = [operate_exp(x, cur_domain)[0] for x in _brackets]
+                        items.append(SymbolItem('Var', 'Arr', p.children[1], None, '%x' + str(LOC - 1), 'i32', dims = len(brackets), dimL = brackets))
+                item.typel = pType
+                FILE_OUT.write(')\n')
+                ft = n.children[0]
+                if ft == 'int':
+                    ft = 'i32'
+                item.params = items
+                LDR(n.children[5], ignore, cur_domain, items = items, func_block = True, func_type = ft)
+            return
         elif n.name == "Block":
             domain_num = DOMAIN_LOC
             DOMAIN_LOC += 1
             domain = Domain(domain_num, father = cur_domain)
+            if func_block:
+                RET = False
             if cur_domain:
                 cur_domain.children.append(domain)
             if not cur_domain.father:
                 print_node(n.children[0], ignore)
-            LDR(n.children[1], ignore = ignore, cur_domain = domain, glob = False, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
+            if items:
+                for it in items:
+                    it.domain = domain
+                itemnew = func_param_decl(items)
+                domain.item_tab += itemnew
+            LDR(n.children[1], ignore = ignore, cur_domain = domain, glob = False, condition = condition, loc_break = loc_break, loc_continue = loc_continue, func_type = func_type)
+            if func_block :
+                FILE_OUT.write('ret %s ' % (func_type))
+                if func_type == 'i32':
+                    FILE_OUT.write('0')
+                FILE_OUT.write('\n')
             if not cur_domain.father:
                 print_node(n.children[2], ignore)
             return
@@ -618,7 +775,7 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
             return
         elif n.name == 'VarDef':
             var = n.children[0]
-            # print(var.val)
+            # print(var.val, n.children)
             assert var.name == 'Ident'
             item = find_var_in_domain(cur_domain, var.val)
             if item:
@@ -681,6 +838,7 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
                 else:
                     if item.dataType == 'Arr':
                         _brackets = get_brackets(var.children[1])
+                        assert item.dim == len(_brackets)
                         res = operate_exp(n.children[2], cur_domain, glob)
                         brackets = [operate_exp(x, cur_domain, glob)[0] for x in _brackets]
                         LOC += 2
@@ -705,7 +863,7 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
                             FILE_OUT.write("store i32 %%x%d, i32* %%x%d\n" % (res_pos, res_pos_ptr))
                         FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
                         LOC += 1
-                        if len(brackets) == len(item.dimL):
+                        if item.val != 'i32':
                             FILE_OUT.write(', i32 0')
                         FILE_OUT.write(', i32 %%x%d\n' % (res_pos))
                         FILE_OUT.write('store i32 %s, i32* %%x%d\n' % (res[0], LOC - 1))
@@ -716,8 +874,13 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
             print('item not find')
             sys.exit(1)
         elif n.name == 'return':
-            op = operate_exp(n.children[1], cur_domain)
-            FILE_OUT.write('ret i32 ' + str(op[0]) + '\n')
+            if len(n.children) == 2:
+                FILE_OUT.write('ret void\n')
+            else:
+                op = operate_exp(n.children[1], cur_domain)
+                FILE_OUT.write('ret i32 ' + str(op[0]) + '\n')
+            if func_type:
+                RET = True
             return 
         elif n.name == 'IfElse':
             if_else_operator(n, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
@@ -765,7 +928,7 @@ def main(args):
     assert FILE_OUT is not None
 
     text = FILE_IN.read()
-    FILE_OUT.write("declare i32 @getch()\ndeclare void @putch(i32)\ndeclare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @memset(i32*, i32, i32)\n")
+    FILE_OUT.write("declare i32 @getch()\ndeclare void @putch(i32)\ndeclare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @memset(i32*, i32, i32)\ndeclare i32 @getarray(i32*)\ndeclare void @putarray(i32, i32*)\n")
     lexer = lexer_init(text)
     print(text)
     # tok = lexer.token()
@@ -773,7 +936,6 @@ def main(args):
     #     print(tok)
     #     tok = lexer.token()
     result = run_parser(text, lexer)
-    # print_out(result, output_path)
     LDR(result, ignore = False, cur_domain = Domain(0), glob = True)
 
     FILE_IN.close()

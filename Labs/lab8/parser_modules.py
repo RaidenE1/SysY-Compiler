@@ -5,24 +5,37 @@ from tokrules import tokens
 from ast_modules import AstNode
 
 def p_CompUnit(p):
-    ''' CompUnit : MulDef '''
-    p[0] = p[1]
-
-def p_MulDef(p):
-    ''' MulDef : Decl MulDef
-               | FuncDef '''
+    ''' CompUnit : CompUnit FuncDef 
+                 | CompUnit Decl
+                 | FuncDef
+                 | Decl'''
     if len(p) == 2:
         p[0] = p[1]
     else:
-        p[0] = AstNode('NT', [p[1], p[2]], 'MulDef')
+        p[0] = AstNode('NT', [p[1], p[2]], 'CU')
 
 def p_FuncDef(p):
-    ''' FuncDef : FuncType Main LPar RPar Block'''
-    p[0] = AstNode('NT', [p[1], p[2], p[3], p[4], p[5]], 'FuncDef')
+    ''' FuncDef : Int IDENT LPar FuncParams RPar Block
+                | Void IDENT LPar FuncParams RPar Block
+                | Int IDENT LPar RPar Block
+                | Void IDENT LPar RPar Block '''
+    p[0] = AstNode('NT', p[1:], 'FuncDef')
 
-def p_FuncType(p):
-    ''' FuncType : Int '''
-    p[0] = p[1]
+def p_FuncParams(p):
+    ''' FuncParams : FuncParam AddFuncParam 
+                   | FuncParam '''
+    p[0] = AstNode('NT', p[1:], 'FuncPDecl')
+
+def p_AddFuncParam(p):
+    ''' AddFuncParam : Comma FuncParam AddFuncParam
+                     | Comma FuncParam '''
+    p[0] = AstNode('NT', p[1:], 'AddFuncParam')
+    
+def p_FuncParam(p):
+    ''' FuncParam : Int IDENT LBracket RBracket AddBracket
+                  | Int IDENT LBracket RBracket
+                  | Int IDENT '''
+    p[0] = AstNode('NT', p[1:], 'FuncParam')
 
 def p_Block(p):
     ''' Block : LBrace AddBlock RBrace '''
@@ -47,7 +60,7 @@ def p_Decl(p):
     p[0] = p[1]
 
 def p_ConstDecl(p):
-    ''' ConstDecl : Const BType AddConstDef Semicolon '''
+    ''' ConstDecl : Const Int AddConstDef Semicolon '''
     p[0] = AstNode('NT', [p[1], p[2], p[3], p[4]], 'ConstDecl')
 
 def p_AddConstDef(p):
@@ -71,10 +84,6 @@ def p_AddBracket(p):
                    | LBracket AddExp RBracket '''
     p[0] = AstNode('NT', p[1:], 'AddBracket')
 
-def p_BType(p):
-    ''' BType : Int'''
-    p[0] = AstNode('T', None, 'BType', p[1])
-
 def p_ConstInitVal(p):
     ''' ConstInitVal : AddExp 
                      | LBrace RBrace 
@@ -95,7 +104,7 @@ def p_AddConstInitval(p):
             
     
 def p_VarDecl(p):
-    ''' VarDecl : BType AddVarDef Semicolon '''
+    ''' VarDecl : Int AddVarDef Semicolon '''
     p[0] = AstNode('NT', [p[1], p[2], p[3]], 'VarDecl')
 
 def p_AddVarDef(p):
@@ -141,6 +150,7 @@ def p_Stmt(p):
              | Exp Semicolon 
              | Continue Semicolon
              | Break Semicolon
+             | Return Semicolon
              | Return Exp Semicolon 
              | LVal Assign Exp Semicolon
              | If LPar Cond RPar Stmt 
@@ -153,6 +163,8 @@ def p_Stmt(p):
             p[0] = AstNode('NT', [p[1], p[2]], 'Cont')
         elif p[1] == 'break':
             p[0] = AstNode('NT', [p[1], p[2]], 'Break')
+        elif p[1] == 'return':
+            p[0] = AstNode('NT', [p[1], p[2]], 'return')
         else:
             p[0] = AstNode('NT', [p[1], p[2]], 'ExpSemi')
     elif len(p) == 4:
@@ -249,6 +261,8 @@ def p_UnaryExp(p):
     ''' UnaryExp : PrimaryExp 
                  | Plus UnaryExp
                  | Minus UnaryExp 
+                 | IDENT LPar RPar
+                 | IDENT LPar FuncRParams RPar
                  | NG UnaryExp
                  | SysFunc LPar RPar
                  | SysFunc LPar FuncRParams RPar '''
@@ -264,14 +278,12 @@ def p_UnaryExp(p):
 def p_FuncRParams(p):
     ''' FuncRParams : Exp Exps
                     | Exp '''
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = AstNode('NT', [p[1], p[2]], 'FuncRParams')
+    p[0] = AstNode('NT', p[1:], 'FuncRParams')
 
 def p_Exps(p):
-    ''' Exps : Comma Exp '''
-    p[0] = AstNode('NT', [p[1], p[2]], 'Exps')
+    ''' Exps : Comma Exp Exps
+             | Comma Exp '''
+    p[0] = AstNode('NT', p[1:], 'Exps')
 
 
 def p_PrimaryExp(p):

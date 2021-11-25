@@ -24,7 +24,6 @@ reserved = {
     'break' : 'Break',
     'continue' : 'Continue',
     'return' : 'Return',
-    'main' : 'Main',
     'int' : 'Int',
     'const' : 'Const',
     ',' : 'Comma',
@@ -33,7 +32,8 @@ reserved = {
     '!=' : 'NotEq',
     '!' : 'NG',
     '[' : 'LBracket',
-    ']' : 'RBracket'
+    ']' : 'RBracket',
+    'void' : 'Void'
 }
 
 tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'RESERVED', 'IDENT', 'SysFunc'] + list(reserved.values())
@@ -43,7 +43,7 @@ def t_COMMENT(t):
      pass
 
 def t_SysFunc(t):
-    r'getint|putint|getch|putch'
+    r'getint|putint|getch|putch|getarray|putarray'
     return t
 
 def t_RESERVED(t):
