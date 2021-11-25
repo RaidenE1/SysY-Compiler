@@ -1,13 +1,14 @@
 # SysY-Compiler
 
-
-北京航空航天大学软件学院1921级编译原理课程实验
-
-
+> 北京航空航天大学软件学院1921级编译原理课程实验
 
 实验要求参见[此处](https://github.com/BUAA-SE-Compiling/miniSysY-tutorial) 
 
 评测机地址[戳戳](https://oj.karenia.cc/dashboard)
+
+---
+
+
 
 
 本项目采用python语言编写，使用PLY进行词法分析和语法分析，构建的一种类C语言的编译器。只处理前端代码到LLVM IR的部分，目的是生成可以正确解释的LLVM IR文件。
@@ -55,7 +56,7 @@ lli out.ll // 解释out.ll
 - [lab5](./Labs/lab5/) Accepted on Nov 18,2021
 - [lab6](./Labs/lab6/) Accepted on Nov 19,2021
 - [lab7](./Labs/lab7/) Accepted on Nov 23,2021
-- [lab8](./Labs/lab8/) yet to be accepted ......
+- [lab8](./Labs/lab8/)  Accepted on Nov 25,2021
 - [challenge : Multi-dimensional array](./Labs/challenge/MDA/) yet to be accepted ......
 - [challenge : Short-circuit evaluation](./Labs/challenge/SCE/) yet to be accepted ......
 
