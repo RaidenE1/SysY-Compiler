@@ -1,17 +1,21 @@
 # SysY-Compiler
 
-> 北京航空航天大学软件学院1921级编译原理课程实验
+北京航空航天大学软件学院1921级编译原理课程实验
+
+## 简介
+
+本项目采用python语言编写，使用PLY进行词法分析和语法分析，构建的一种类C语言的编译器。只处理前端代码到LLVM IR的部分，目的是生成可以正确解释的LLVM IR文件。
 
 实验要求参见[此处](https://github.com/BUAA-SE-Compiling/miniSysY-tutorial) 
 
 评测机地址[戳戳](https://oj.karenia.cc/dashboard)
 
----
+## 说明
 
-
-
-
-本项目采用python语言编写，使用PLY进行词法分析和语法分析，构建的一种类C语言的编译器。只处理前端代码到LLVM IR的部分，目的是生成可以正确解释的LLVM IR文件。
+- [src](./src/) 目录下是整个编译器完整的代码
+- [libsysy](./libsysy/) 目录下是SysY语言需要链接的库
+- 具体测试，包括`Dockerfile`和`judge.toml`的编写要求可以参照 [test](./test/) 目录下的说明
+- 其中[Labs](./Labs/)目录下是每一次实验的代码，经过多次重构和迭代，功能可能有所重复，但可以对照实验需求观察迭代的过程。
 
 代码结构：
 
@@ -38,13 +42,6 @@ clang -emit-llvm -S libsysy.c -o lib.ll  // clang编译头文件
 llvm-link testout.ll lib.ll  -o out.ll  // 链接生成out.ll
 lli out.ll // 解释out.ll
 ```
-
-## 说明
-
-- [src](./src/) 目录下是整个编译器完整的代码
-- [libsysy](./libsysy/) 目录下是SysY语言需要链接的库
-- 具体测试，包括`Dockerfile`和`judge.toml`的编写要求可以参照 [test](./test/) 目录下的说明
-- 其中[Labs](./Labs/)目录下是每一次实验的代码，经过多次重构和迭代，功能可能有所重复，但可以对照实验需求观察迭代的过程。
 
 ## 归档
 
