@@ -1,0 +1,7 @@
+[jobs.short_circuit]
+
+image = { source = "dockerfile", path = "."}
+
+run = [
+  "python main.py $input $ir",
+]
