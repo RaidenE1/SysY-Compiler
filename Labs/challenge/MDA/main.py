@@ -104,7 +104,15 @@ def operate_exp(n, cur_domain, glob = False):
                     FILE_OUT.write('\n')
                     return '%x' + str(LOC - 1), False
                 _brackets = get_brackets(var.children[1])
-                brackets = [operate_exp(x, cur_domain, glob = False)[0] for x in _brackets]
+                brackets = []
+                for x in _brackets:
+                    _res = operate_exp(x, cur_domain, glob)
+                    res_loc = _res[0]
+                    if _res[1]:
+                        FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res_loc))
+                        LOC += 1
+                        res_loc= '%x' + str(LOC - 1)
+                    brackets.append(res_loc)
                 item = find_var_cross_domain(cur_domain, var.val)
                 if not item:
                     print('item not defined')
@@ -114,19 +122,29 @@ def operate_exp(n, cur_domain, glob = False):
                 res_pos = LOC - 1
                 FILE_OUT.write('%%x%d = alloca i32\nstore i32 0, i32* %%x%d\n%%x%d = load i32, i32* %%x%d\n' %(res_pos_ptr, res_pos_ptr, res_pos, res_pos_ptr))
                 changed = False
-                for idxx in range(len(brackets) - 1):
-                    val = brackets[idxx]
-                    if val != 0:
-                        LOC += 2
-                        FILE_OUT.write('%%x%d = mul i32 %s, %s \n' % (LOC - 2, val, item.dimL[idxx + 1]))
-                        FILE_OUT.write('%%x%d = add i32 %%x%d, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
+                if len(brackets) < len(item.dimL):
+                    for idxx in range(len(brackets)):
+                        val = brackets[idxx]
+                        if val != 0:
+                            LOC += 2
+                            FILE_OUT.write('%%x%d = mul i32 %s, %s \n' % (LOC - 2, val, get_mul(item.dimL[idxx + 1:])))
+                            FILE_OUT.write('%%x%d = add i32 %%x%d, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
+                            res_pos = LOC - 1
+                            changed = True
+                else:
+                    for idxx in range(len(brackets) - 1):
+                        val = brackets[idxx]
+                        if val != 0:
+                            LOC += 2
+                            FILE_OUT.write('%%x%d = mul i32 %s, %s \n' % (LOC - 2, val, get_mul(item.dimL[idxx + 1:])))
+                            FILE_OUT.write('%%x%d = add i32 %%x%d, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
+                            res_pos = LOC - 1
+                            changed = True
+                    if brackets[-1] != 0:
+                        LOC += 1
+                        FILE_OUT.write('%%x%d = add i32 %%x%d, %s\n' % (LOC - 1, res_pos, brackets[-1]))
                         res_pos = LOC - 1
                         changed = True
-                if brackets[-1] != 0:
-                    LOC += 1
-                    FILE_OUT.write('%%x%d = add i32 %%x%d, %s\n' % (LOC - 1, res_pos, brackets[-1]))
-                    res_pos = LOC - 1
-                    changed = True
                 if changed:
                     FILE_OUT.write("store i32 %%x%d, i32* %%x%d\n" % (res_pos, res_pos_ptr))
                 FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
@@ -134,9 +152,9 @@ def operate_exp(n, cur_domain, glob = False):
                 if item.val != 'i32':
                     FILE_OUT.write(', i32 0')
                 FILE_OUT.write(', i32 %%x%d\n' % (res_pos))
-                LOC += 1
-                FILE_OUT.write('%%x%d = load i32, i32* %%x%d\n' % (LOC - 1, LOC - 2))
-                return '%x' + str(LOC - 1), False
+                # LOC += 1
+                # FILE_OUT.write('%%x%d = load i32, i32* %%x%d\n' % (LOC - 1, LOC - 2))
+                return '%x' + str(LOC - 1), True
 
             else:
                 print("not int not str")
@@ -193,11 +211,20 @@ def operate_exp(n, cur_domain, glob = False):
             sys.exit(1)
         if len(n.children) == 4:
             params = get_params(n.children[2])
-            params_res = [operate_exp(x, cur_domain, glob)[0] for x in params]
+            _params_res = []
+            params_res = []
+            for _ in params:
+                _res = operate_exp(_, cur_domain, glob)
+                res_loc = _res[0]
+                if _res[1]:
+                    FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res_loc))
+                    LOC += 1
+                    res_loc = '%x' + str(LOC - 1)
+                _params_res.append(_res[0])
+                params_res.append(res_loc)
             if item:
                 fType = item._type
                 f_param = item.params
-                print(item.name, f_param)
                 if fType != 'void':
                     FILE_OUT.write('%%x%d = ' % (LOC))
                     LOC += 1
@@ -220,9 +247,9 @@ def operate_exp(n, cur_domain, glob = False):
             elif n.children[0] == 'putch':
                 FILE_OUT.write("call void @putch(i32 %s)\n" %(params_res[0]))
             elif n.children[0] == 'putarray':
-                FILE_OUT.write("call void @putarray(i32 %s, i32* %s)\n" %(params_res[0], params_res[1]))
+                FILE_OUT.write("call void @putarray(i32 %s, i32* %s)\n" %(params_res[0], _params_res[1]))
             elif n.children[0] == 'getarray':
-                FILE_OUT.write("%%x%d = call i32 @getarray(i32* %s)\n" %(LOC, params_res[0]))
+                FILE_OUT.write("%%x%d = call i32 @getarray(i32* %s)\n" %(LOC, _params_res[0]))
                 LOC += 1
                 return '%x' + str(LOC - 1), False
             else:
@@ -252,24 +279,34 @@ def operate_exp(n, cur_domain, glob = False):
     elif n.name == 'MulExp':
         if len(n.children) == 3:
             op1 = operate_exp(n.children[0], cur_domain, glob)
+            loc1 = op1[0]
+            if op1[1]:
+                FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, loc1))
+                LOC += 1
+                loc1 = '%x' + str(LOC - 1)
             op2 = operate_exp(n.children[2], cur_domain, glob)
+            loc2 = op2[0]
+            if op2[1]:
+                FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, loc2))
+                LOC += 1
+                loc2 = '%x' + str(LOC - 1)
             if n.children[1] == '//':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%x%d = sdiv i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                if isinstance(loc1, str) or isinstance(loc2, str):
+                    FILE_OUT.write("%%x%d = sdiv i32 %s, %s\n" %(LOC, str(loc1), str(loc2)))
                     LOC += 1
                     return '%x' + str(LOC - 1), False
                 else:
-                    return int(eval(str(op1[0]) + ' // ' + str(op2[0]))), False
+                    return int(eval(str(loc1) + ' // ' + str(loc2))), False
             elif n.children[1] == '*':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%x%d = mul i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                if isinstance(loc1, str) or isinstance(loc2, str):
+                    FILE_OUT.write("%%x%d = mul i32 %s, %s\n" %(LOC, str(loc1), str(loc2)))
                     LOC += 1
                     return '%x' + str(LOC - 1), False
                 else:
-                    return int(eval(str(op1[0]) + ' * ' + str(op2[0]))), False
+                    return int(eval(str(loc1) + ' * ' + str(loc2))), False
             elif n.children[1] == '%':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%x%d = srem i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                if isinstance(loc1, str) or isinstance(loc2, str):
+                    FILE_OUT.write("%%x%d = srem i32 %s, %s\n" %(LOC, str(loc1), str(loc2)))
                     LOC += 1
                     return '%x' + str(LOC - 1), False
                 else:
@@ -277,28 +314,38 @@ def operate_exp(n, cur_domain, glob = False):
                         sign = 1
                     else:
                         sign = -1
-                    return sign * int(eval(str(abs(op1[0])) + ' % ' + str(abs(op2[0])))), False
+                    return sign * int(eval(str(abs(loc1)) + ' % ' + str(abs(loc2)))), False
             else:
                 print('MulExp OP Error')
                 exit(1)
     elif n.name == 'AddExp':
         if len(n.children) == 3:
             op1 = operate_exp(n.children[0], cur_domain, glob)
+            loc1 = op1[0]
+            if op1[1]:
+                FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, loc1))
+                LOC += 1
+                loc1 = '%x' + str(LOC - 1)
             op2 = operate_exp(n.children[2], cur_domain, glob)
+            loc2 = op2[0]
+            if op2[1]:
+                FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, loc2))
+                LOC += 1
+                loc2 = '%x' + str(LOC - 1)
             if n.children[1] == '+':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%x%d = add i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                if isinstance(loc1, str) or isinstance(loc1, str):
+                    FILE_OUT.write("%%x%d = add i32 %s, %s\n" %(LOC, str(loc1), str(loc2)))
                     LOC += 1
                     return '%x' + str(LOC - 1), False
                 else:
-                    return int(eval(str(op1[0]) + ' + ' + str(op2[0]))), False
+                    return int(eval(str(loc1) + ' + ' + str(loc2))), False
             elif n.children[1] == '-':
-                if isinstance(op1[0], str) or isinstance(op2[0], str):
-                    FILE_OUT.write("%%x%d = sub i32 %s, %s\n" %(LOC, str(op1[0]), str(op2[0])))
+                if isinstance(loc1, str) or isinstance(loc2, str):
+                    FILE_OUT.write("%%x%d = sub i32 %s, %s\n" %(LOC, str(loc1), str(loc2)))
                     LOC += 1
                     return '%x' + str(LOC - 1), False
                 else:
-                    return int(eval(str(op1[0]) + ' - ' + str(op2[0]))), False
+                    return int(eval(str(loc1) + ' - ' + str(loc2))), False
             else:
                 print('AddExp OP Error')
                 exit(1)
@@ -328,11 +375,21 @@ def operate_exp(n, cur_domain, glob = False):
             '!=' : 'ne',
         }
         if len(n.children) == 3:
-            op1 = operate_exp(n.children[0], cur_domain, glob)[0]
-            op2 = operate_exp(n.children[2], cur_domain, glob)[0]
+            op1 = operate_exp(n.children[0], cur_domain, glob)
+            loc1 = op1[0]
+            if op1[1]:
+                FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, loc1))
+                LOC += 1
+                loc1 = '%x' + str(LOC - 1)
+            op2 = operate_exp(n.children[2], cur_domain, glob)
+            loc2 = op2[0]
+            if op2[1]:
+                FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, loc2))
+                LOC += 1
+                loc2 = '%x' + str(LOC - 1)
             op = OpMap.get(n.children[1], None)
             assert op is not None
-            FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, op1, op2))
+            FILE_OUT.write('%%x%d = icmp %s i32 %s, %s\n' % (LOC, op, loc1, loc2))
             LOC += 1
             FILE_OUT.write('%%x%d = zext i1 %%x%d to i32\n' %(LOC, LOC - 1))
             LOC += 1
@@ -485,27 +542,33 @@ def get_arr_name(brackets, pos):
         return head + bottle
 
 def get_add_init_val(n, p, pos, cur_domain, glob):
-    res = get_init_val(n.children[1], 0, pos + [p], cur_domain, glob)
+    res = get_init_val(n.children[1], 0, pos+[p], cur_domain, glob)
     if len(n.children) == 3:
         res += get_add_init_val(n.children[2], p + 1, pos, cur_domain, glob)
     return res
 
 def get_init_val(n, p, pos, cur_domain, glob = False):
-    if n.name[-3:] == "Exp":
-        val = operate_exp(n, cur_domain, glob)[0]
-        arr_node = Array(pos, val)
+    global LOC
+    if n.name[-3:] == "Exp" or len(n.children) == 1:
+        val = operate_exp(n, cur_domain, glob)
+        res_loc = val[0]
+        if val[1]:
+            FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res_loc))
+            LOC += 1
+            res_loc= '%x' + str(LOC - 1)
+        arr_node = Array(pos, res_loc)
         return [arr_node]
     elif len(n.children) == 3:
         return get_init_val(n.children[1], 0, pos + [p], cur_domain, glob)
     elif len(n.children) == 4:
         return get_init_val(n.children[1], 0, pos + [p], cur_domain, glob) + get_add_init_val(n.children[2], 1, pos, cur_domain, glob)
     else:
-        return None
+        return []
 
 def get_pos(val_pos, arr_len):
     res = 0
     for i in range(len(val_pos) - 1):
-        res += val_pos[i] * arr_len[i + 1]
+        res += val_pos[i] * get_mul(arr_len[i + 1:])
     res += val_pos[-1]
     return res
 
@@ -587,15 +650,15 @@ def arr_decl(n, cur_domain, glob = False):
             LOC += 1
             FILE_OUT.write(', i32 0')
             res_pos = 0
-            for idxx in range(len(enumerate(arr_node.pos)) - 1):
+            for idxx in range(len(arr_node.pos) - 1):
                 ele_pos = arr_node.pos[idxx]
                 if ele_pos >= brackets[idxx]:
                     print('pos out of bound')
                     sys.exit(1)
                 else:
-                    res_pos += ele_pos * brackets[idxx + 1]  
+                    res_pos += ele_pos * get_mul(brackets[idxx + 1:])  
             res_pos += arr_node.pos[-1]  
-            FILE_OUT.write(', i32 %d\n', res_pos)
+            FILE_OUT.write(', i32 %d\n' % (res_pos))
             FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(arr_node.val, LOC - 1))
     else:
         if glob:
@@ -617,7 +680,7 @@ def arr_decl(n, cur_domain, glob = False):
                     arr_ptr = 0
                     FILE_OUT.write('[')
                     arr_len = get_mul(item_glob.dimL)
-                    while arr_ptr < arr_len or val_ptr < len(val_list):
+                    while arr_ptr < arr_len:
                         val_pos = 0
                         if val_ptr < len(val_list):
                             val_pos = get_pos(val_list[val_ptr].pos, item_glob.dimL)
@@ -659,7 +722,7 @@ def arr_decl(n, cur_domain, glob = False):
                         print('pos out of bound')
                         sys.exit(1)
                     else:
-                        res_pos += ele_pos * brackets[idxx + 1]  
+                        res_pos += ele_pos * get_mul(brackets[idxx + 1:])
                 res_pos += arr_node.pos[-1]  
                 FILE_OUT.write(', i32 %d\n' % (res_pos))
                 FILE_OUT.write('store i32 %s, i32* %%x%d\n' %(arr_node.val, LOC - 1))
@@ -840,32 +903,33 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
                         _brackets = get_brackets(var.children[1])
                         assert item.dim == len(_brackets)
                         res = operate_exp(n.children[2], cur_domain, glob)
-                        brackets = [operate_exp(x, cur_domain, glob)[0] for x in _brackets]
+                        brackets = []
+                        for x in _brackets:
+                            _res = operate_exp(x, cur_domain, glob)
+                            res_loc = _res[0]
+                            if _res[1]:
+                                FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res_loc))
+                                LOC += 1
+                                res_loc= '%x' + str(LOC - 1)
+                            brackets.append(res_loc)
                         LOC += 2
-                        res_pos_ptr = LOC - 2
-                        res_pos = LOC - 1
-                        FILE_OUT.write('%%x%d = alloca i32\nstore i32 0, i32* %%x%d\n%%x%d = load i32, i32* %%x%d\n' %(res_pos_ptr, res_pos_ptr, res_pos, res_pos_ptr))
-                        changed = False
+                        res_pos = 0
                         for idxx in range(len(brackets) - 1):
                             val = brackets[idxx]
                             if val != 0:
                                 LOC += 2
-                                FILE_OUT.write('%%x%d = mul i32 %s, %s\n' % (LOC - 2, val, item.dimL[idxx + 1]))
-                                FILE_OUT.write('%%x%d = add i32 %%x%d, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
-                                res_pos = LOC - 1
-                                changed = True
+                                FILE_OUT.write('%%x%d = mul i32 %s, %s\n' % (LOC - 2, val, get_mul(item.dimL[idxx + 1:])))
+                                FILE_OUT.write('%%x%d = add i32 %s, %%x%d\n' % (LOC - 1, res_pos, LOC - 2))
+                                res_pos = '%x' + str(LOC - 1)
                         if brackets[-1] != 0:
                             LOC += 1
-                            FILE_OUT.write('%%x%d = add i32 %%x%d, %s\n' % (LOC - 1, res_pos, brackets[-1]))
-                            res_pos = LOC - 1
-                            changed = True
-                        if changed:
-                            FILE_OUT.write("store i32 %%x%d, i32* %%x%d\n" % (res_pos, res_pos_ptr))
+                            FILE_OUT.write('%%x%d = add i32 %s, %s\n' % (LOC - 1, res_pos, brackets[-1]))
+                            res_pos = '%x' + str(LOC - 1)
                         FILE_OUT.write('%%x%d = getelementptr %s, %s* %s' %(LOC, item.val, item.val, item.loc))
                         LOC += 1
                         if item.val != 'i32':
                             FILE_OUT.write(', i32 0')
-                        FILE_OUT.write(', i32 %%x%d\n' % (res_pos))
+                        FILE_OUT.write(', i32 %s\n' % (res_pos))
                         FILE_OUT.write('store i32 %s, i32* %%x%d\n' % (res[0], LOC - 1))
                     else:
                         res = operate_exp(n.children[2], cur_domain)[0]
@@ -878,7 +942,12 @@ def LDR(n, ignore = False, cur_domain = None, glob = False, condition = None, lo
                 FILE_OUT.write('ret void\n')
             else:
                 op = operate_exp(n.children[1], cur_domain)
-                FILE_OUT.write('ret i32 ' + str(op[0]) + '\n')
+                res_loc = op[0]
+                if op[1]:
+                    FILE_OUT.write("%%x%d = load i32, i32* %s\n" % (LOC, res_loc))
+                    LOC += 1
+                    res_loc= '%x' + str(LOC - 1)
+                FILE_OUT.write('ret i32 ' + str(res_loc) + '\n')
             if func_type:
                 RET = True
             return 
