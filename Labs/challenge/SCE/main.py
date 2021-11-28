@@ -429,37 +429,78 @@ def operate_exp(n, cur_domain, glob = False):
         print('EXP OPERATION ERROR')
         exit(1)
 
+def get_LEXP(n):
+    if n.name == 'LOrExp':
+        return get_LEXP(n.children[0]) + ['or'] + get_LEXP(n.children[2])
+    elif n.name == 'LAndExp':
+        return get_LEXP(n.children[0]) + ['and'] + get_LEXP(n.children[2])
+    elif n.name[-3:] == 'Exp':
+        return [n]
+
 def if_else_operator(n, cur_domain, condition = None, loc_break = None, loc_continue = None):
     global FILE_OUT
     global LOC
     loc_after = 0
     assert n.name == 'IfElse'
+    cond_list = get_LEXP(n.children[2])
     if len(n.children) == 5:
-        res = operate_exp(n.children[2], cur_domain)
-        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
-        loc0 = LOC
-        LOC += 1
-        stmt = n.children[4]
-        LOC += 2
-        loc = LOC - 2
+        cur_loc = LOC
+        LOC += ((len(cond_list)+1)//2 + 2)
         loc_after = LOC - 1
-        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc, loc_after))     
+        loc = LOC - 2
+        for i in range(0, len(cond_list), 2):
+            cond = cond_list[i]
+            cond_res = operate_exp(cond, cur_domain)[0]
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, cond_res))
+            LOC += 1
+            if i == len(cond_list) - 1:
+                if cond_list[i-1] == 'and':
+                    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc, loc_after))
+                else:
+                    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc, loc_after))
+                continue
+            if cond_list[i+1] == 'and':
+                FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, cur_loc + 1, loc_after))
+            else:
+                FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc, cur_loc + 1))
+            if i != len(cond_list) - 1:
+                FILE_OUT.write('x%d:\n' % (cur_loc + 1))
+            cur_loc += 1
+        stmt = n.children[4]
         block_operate(stmt, loc, loc_after, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
-        # FILE_OUT.write('br label %%x%d\n' %(loc))
     elif len(n.children) == 7:
-        res = operate_exp(n.children[2], cur_domain)
-        FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, res[0]))
-        loc0 = LOC
-        LOC += 1
+        cur_loc = LOC
+        LOC += ((len(cond_list)+1)//2 + 3)
+        loc_after = LOC - 1
+        loc2 = LOC - 2
+        loc1 = LOC - 3
+        for i in range(0, len(cond_list), 2):
+            cond = cond_list[i]
+            cond_res = operate_exp(cond, cur_domain)[0]
+            FILE_OUT.write('%%x%d = icmp ne i32 %s, 0\n' %(LOC, cond_res))
+            LOC += 1
+            if i == len(cond_list) - 1:
+                if cond_list[i-1] == 'and':
+                    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc1, loc2))
+                else:
+                    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc1, loc2))
+                continue
+            if cond_list[i+1] == 'and':
+                j = i + 1
+                while j < len(cond_list) and cond_list[j] == 'and':
+                    j += 2
+                print(j,i)
+                if j > len(cond_list) :
+                    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, cur_loc + 1, loc2))
+                else:
+                    FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, cur_loc + 1, cur_loc + 1 + (j-i-1)//2))
+            else:
+                FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(LOC - 1, loc1, cur_loc + 1))
+            FILE_OUT.write('x%d:\n' % (cur_loc + 1))
+            cur_loc += 1
         stmt1 = n.children[4]
         stmt2 = n.children[6]
-        LOC += 3
-        loc1 = LOC - 3
-        loc2 = LOC - 2
-        loc_after = LOC - 1
-        FILE_OUT.write('br i1 %%x%d, label %%x%d, label %%x%d\n' %(loc0, loc1, loc2))
         block_operate(stmt1, loc1, loc_after, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
-        # FILE_OUT.write('br label %%x%d\n' %(loc2))
         block_operate(stmt2, loc2, loc_after, cur_domain, condition = condition, loc_break = loc_break, loc_continue = loc_continue)
     else:
         print('IfElse len Error')
