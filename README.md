@@ -32,16 +32,27 @@
    ├── libsysy.h
 ```
 
-参考运行命令：
+## 运行项目
 
+## 环境配置
+
+要运行本项目，首先要有 Python 环境，并安装 Ply 库:
 ```bash
-cd $HOME_PATH/src // 进入代码所在目录
-cp ../libsysy/* ./ //将头文件从源文件夹中移入src
-python main.py testin.in testout.ll // 生成LLVM IR文件
-clang -emit-llvm -S libsysy.c -o lib.ll  // clang编译头文件
-llvm-link testout.ll lib.ll  -o out.ll  // 链接生成out.ll
-lli out.ll // 解释out.ll
+pip install ply
 ```
+推荐在 Ubuntu/MacOS 环境上执行，并安装 llvm 工具链。Ubuntu 20.04 的安装命令如下：
+```bash
+$ sudo apt-get install llvm
+$ sudo apt-get install clang
+```
+安装完成后可以通过以下命令进行测试：
+
+$ clang -v 		# 查看版本，若出现版本信息则说明安装成功
+$ lli --version # 查看版本，若出现版本信息则说明安装成功
+
+## 其他
+
+课程大作业里面的Bug可能很多，代码写的也很乱，功能方面也不是十分完善，但之后不打算进行任何维护。
 
 ## 归档
 
