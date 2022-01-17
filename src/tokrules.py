@@ -12,7 +12,9 @@ reserved = {
     '*' : 'Mult',
     '/' : 'Div',
     '<' : 'Lt',
+    '<=' : 'Le',
     '>' : 'Gt',
+    '>=' : 'Ge',
     '%' : 'Mod',
     '==' : 'Eq',
     '-' : 'Minus',
@@ -22,29 +24,40 @@ reserved = {
     'break' : 'Break',
     'continue' : 'Continue',
     'return' : 'Return',
-    'main' : 'Main',
-    'int' : 'Int'
+    'int' : 'Int',
+    'const' : 'Const',
+    ',' : 'Comma',
+    '||' : 'OR',
+    '&&' : 'AND',
+    '!=' : 'NotEq',
+    '!' : 'NG',
+    '[' : 'LBracket',
+    ']' : 'RBracket',
+    'void' : 'Void'
 }
 
-tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'REVERSED', 'IDENT'] + list(reserved.values())
+tokens = ['COMMENT', 'DECIMAL', 'OCTAL', 'HEXADECIMAL', 'RESERVED', 'IDENT', 'SysFunc'] + list(reserved.values())
 
 def t_COMMENT(t):
      r'(//.*)|(/\*(.|\r\n|\n|\t\n)*?\*/)'
      pass
 
-def t_RESERVED(t):
-    r'[a-zA-Z]+|\{|\}|\(|\)|\+|\*|;|-|/|%'
-    t.type = reserved.get(t.value)# Check for reserved words
+def t_SysFunc(t):
+    r'getint|putint|getch|putch|getarray|putarray'
     return t
+
+def t_RESERVED(t):
+    r'[a-zA-Z_][a-zA-Z_0-9]*|\{|\}|\(|\)|\+|\*|;|-|/|%|==|,|\|\||&&|=|!=|<=|>=|<|>|!|\[|\]'
+    if t.value in reserved.keys():
+        t.type = reserved.get(t.value)# Check for reserved words
+        return t
+    else:
+        t.type = 'IDENT'
+        return t
 
 def t_HEXADECIMAL(t):
     r'0[xX][0-9a-fA-F]+'
     t.value = int(t.value, 16)
-    return t
-
-
-def t_IDENT(t):
-    r'[a-zA-Z_]+[0-9]'
     return t
 
 def t_DECIMAL(t):
