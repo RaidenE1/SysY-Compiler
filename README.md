@@ -65,8 +65,8 @@ $ lli --version # 查看版本，若出现版本信息则说明安装成功
 - [lab6](./Labs/lab6/) Accepted on Nov 19,2021
 - [lab7](./Labs/lab7/) Accepted on Nov 23,2021
 - [lab8](./Labs/lab8/)  Accepted on Nov 25,2021
-- [challenge : Multi-dimensional array](./Labs/challenge/MDA/) yet to be accepted ......
-- [challenge : Short-circuit evaluation](./Labs/challenge/SCE/) yet to be accepted ......
+- [challenge : Multi-dimensional array](./Labs/challenge/MDA/) Accepted on Dec 3,2021
+- [challenge : Short-circuit evaluation](./Labs/challenge/SCE/) Accepted on Dec 3,2021
 
 ## 参考文档
 
